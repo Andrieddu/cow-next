@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-// IMPORT DEI COMPONENTI FIELD
 import { Field, FieldLabel, FieldDescription } from "@/components/ui/field";
 import {
   User,
@@ -19,7 +18,21 @@ import {
   Plus,
 } from "lucide-react";
 
+// IMPORT DATI MOCK
+import { mockUsers } from "@/lib/mock-data";
+
 export default function SettingsPage() {
+  // Simuliamo l'utente loggato (Giulia Rossi, usr_guest1)
+  const currentUser = mockUsers.find((u) => u.id === "usr_guest1");
+
+  if (!currentUser) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh] text-muted-foreground font-bold">
+        Utente non trovato. Effettua il login.
+      </div>
+    );
+  }
+
   return (
     <main className="flex flex-col w-full min-h-[calc(100vh-80px)] bg-secondary/5 pb-20">
       <div className="container max-w-7xl mx-auto px-6 pt-8 md:pt-12">
@@ -93,8 +106,10 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-6 pb-6 border-b border-border/50">
                       <div className="relative h-20 w-20 rounded-full bg-secondary/20 flex items-center justify-center overflow-hidden border-2 border-background shadow-sm shrink-0">
                         <img
-                          src="https://github.com/shadcn.png"
-                          alt="Avatar"
+                          src={
+                            currentUser.image || "https://github.com/shadcn.png"
+                          }
+                          alt={`${currentUser.name} ${currentUser.surname}`}
                           className="object-cover w-full h-full"
                         />
                       </div>
@@ -120,7 +135,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    {/* Campi Form Ristrutturati con <Field> */}
+                    {/* Campi Form Ristrutturati con <Field> e precompilati */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <Field>
                         <FieldLabel
@@ -132,7 +147,7 @@ export default function SettingsPage() {
                         <Input
                           id="nome"
                           type="text"
-                          defaultValue="Mario"
+                          defaultValue={currentUser.name || ""}
                           className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
                         />
                       </Field>
@@ -147,7 +162,7 @@ export default function SettingsPage() {
                         <Input
                           id="cognome"
                           type="text"
-                          defaultValue="Rossi"
+                          defaultValue={currentUser.surname || ""}
                           className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
                         />
                       </Field>
@@ -162,7 +177,7 @@ export default function SettingsPage() {
                         <Input
                           id="email"
                           type="email"
-                          defaultValue="mario.rossi@example.com"
+                          defaultValue={currentUser.email}
                           className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
                         />
                         <FieldDescription className="px-1">
@@ -181,7 +196,7 @@ export default function SettingsPage() {
                         <Input
                           id="telefono"
                           type="tel"
-                          defaultValue="+39 333 1234567"
+                          defaultValue={currentUser.phone || ""}
                           className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
                         />
                       </Field>
@@ -291,7 +306,10 @@ export default function SettingsPage() {
                           Ricevi email per conferme, modifiche o cancellazioni.
                         </p>
                       </div>
-                      <Switch id="prenotazioni" defaultChecked />
+                      <Switch
+                        id="prenotazioni"
+                        defaultChecked={currentUser.notifyBookings}
+                      />
                     </div>
 
                     <div className="w-full h-px bg-border/50"></div>
@@ -309,7 +327,10 @@ export default function SettingsPage() {
                           Ricevi sconti esclusivi e novità sugli spazi.
                         </p>
                       </div>
-                      <Switch id="promozioni" />
+                      <Switch
+                        id="promozioni"
+                        defaultChecked={currentUser.notifyPromos}
+                      />
                     </div>
 
                     <div className="w-full h-px bg-border/50"></div>
@@ -327,7 +348,7 @@ export default function SettingsPage() {
                           Avvisi urgenti direttamente sul tuo telefono.
                         </p>
                       </div>
-                      <Switch id="sms" />
+                      <Switch id="sms" defaultChecked={currentUser.notifySms} />
                     </div>
                   </div>
                 </div>

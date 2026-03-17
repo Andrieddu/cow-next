@@ -26,6 +26,9 @@ export interface User {
   phone: string | null;
   stripeCustomerId: string | null;
   role: UserRole;
+  notifyBookings: boolean;
+  notifyPromos: boolean;
+  notifySms: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -111,6 +114,9 @@ export const mockUsers: User[] = [
     phone: "+39 333 1234567",
     stripeCustomerId: "cus_host1",
     role: "HOST",
+    notifyBookings: true,
+    notifyPromos: false,
+    notifySms: false,
     createdAt: new Date("2023-01-15"),
     updatedAt: ora,
   },
@@ -123,6 +129,9 @@ export const mockUsers: User[] = [
     phone: "+39 340 9876543",
     stripeCustomerId: "cus_guest1",
     role: "USER",
+    notifyBookings: true,
+    notifyPromos: false,
+    notifySms: false,
     createdAt: new Date("2024-02-10"),
     updatedAt: ora,
   },

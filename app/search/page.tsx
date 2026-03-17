@@ -71,7 +71,7 @@ function SearchContent() {
   // --- STATI DEI FILTRI ---
   const [selectedTypes, setSelectedTypes] = useState<SpaceType[]>([]);
   const [maxHourly, setMaxHourly] = useState<number>(100); // Prezzo orario
-  const [maxTotal, setMaxTotal] = useState<number>(300); // Prezzo totale
+  const [maxTotal, setMaxTotal] = useState<number>(500); // Prezzo totale
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<string>("consigliati");
 
