@@ -1,0 +1,217 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Ruoli dell'utente all'interno della piattaforma
+enum UserRole {
+  USER  // Utente che prenota
+  HOST  // Utente che ospita
+  ADMIN // Amministratore
+}
+
+/// Tipologie di spazi disponibili nel marketplace
+enum SpaceType {
+  DESK            // Postazione singola
+  PRIVATE_OFFICE  // Ufficio privato
+  MEETING_ROOM    // Sala riunioni
+  EVENT_SPACE     // Spazio per eventi
+}
+
+/// Stati possibili di una prenotazione
+enum BookingStatus {
+  PENDING    // In attesa di approvazione o pagamento
+  CONFIRMED  // Prenotazione valida
+  CANCELLED  // Prenotazione annullata
+  COMPLETED  // Soggiorno terminato
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PayoutStatus {
+  PENDING    // In attesa di elaborazione (es. il check-in non è ancora avvenuto)
+  IN_TRANSIT // Bonifico inviato ma non ancora arrivato
+  PAID       // Soldi arrivati sul conto dell'Host
+  FAILED     // Problemi con l'IBAN dell'Host
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  surname       String?
+  email         String    @unique
+  password      String?
+  image         String?
+  phone         String?
+  stripeCustomerId String? @unique 
+  role          UserRole  @default(USER) 
+  notifyBookings Boolean @default(true) // Conferme, modifiche, cancellazioni
+  notifyPromos   Boolean @default(false) // Promozioni e offerte
+  notifySms      Boolean @default(false) // Notifiche SMS
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  spaces          Space[]           // Spazi creati da questo utente (se HOST)
+  bookings        Booking[]         // Prenotazioni effettuate
+  reviews         Review[]          // Recensioni lasciate
+  paymentMethods  PaymentMethod[]   // Carte di credito salvate
+  payments        Payment[]         // Storico dei pagamenti/fatture
+  billingInfo     BillingInfo?
+  conversations Conversation[] @relation("UserConversations")
+  sentMessages  Message[]      @relation("SentMessages")
+  payouts          Payout[] //Relazione per i Payout (Guadagni dell'Host)
+}
+
+model BillingInfo {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  legalName    String   // Nome azienda o Nome Cognome
+  vatId        String?  // P.IVA (opzionale per privati)
+  taxCode      String?  // Codice Fiscale
+  address      String
+  city         String
+  zipCode      String
+  country      String   @default("Italy")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Space {
+  id            String    @id @default(cuid())
+  title         String
+  description   String    @db.Text
+  type          SpaceType
+  city          String
+  address       String
+  capacity      Int       @default(1)
+  hourlyPrice   Float?    // Prezzo per ora
+  dailyPrice    Float?    // Prezzo per giornata intera
+  imageUrls     String[]
+  amenities     String[]
+  openingTime   String?   @default("09:00")
+  closingTime   String?   @default("18:00")
+  openDays      Int[]     @default([1, 2, 3, 4, 5])   // Giorni di apertura (Array di interi: 0 = Domenica, 1 = Lunedì, ..., 6 = Sabato)Esempio: [1, 2, 3, 4, 5] significa aperto da Lunedì a Venerdì
+  isActive    Boolean   @default(true) // Se false, lo spazio non appare nelle ricerche
+  instantBooking Boolean @default(false) // Opzionale: Prenotazione Immediata o con Approvazione?
+  hostId        String
+  host          User      @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  bookings      Booking[]
+  reviews       Review[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId       String
+  space         Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  date          DateTime      @db.Date
+  startTime     String        // Se isFullDay è true, sarà l'orario di apertura (es. "09:00")
+  endTime       String        // Se isFullDay è true, sarà l'orario di chiusura (es. "18:00")
+  isFullDay     Boolean       @default(false) // Se true, ignora le ore e usa dailyPrice
+  totalPrice    Float
+  status        BookingStatus @default(PENDING)
+  payment       Payment?
+  conversation  Conversation?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model PaymentMethod {
+  id              String   @id @default(cuid())
+  stripeMethodId  String   @unique   // Il token fornito da Stripe (es. pm_12345) per addebitare la carta  
+  brand           String   // es. "visa", "mastercard"
+  last4           String   // es. "4242"
+  expMonth        Int      // es. 12
+  expYear         Int      // es. 2025
+  isDefault       Boolean  @default(false) // È la carta principale?
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  amount          Float         // Totale pagato dal Guest (es. 100€)
+  platformFee     Float         // Commissione trattenuta da CoW (es. 10€)
+  hostPayout      Float         // Somma netta che va all'Host (es. 90€)
+  currency        String        @default("EUR")
+  status          PaymentStatus @default(PENDING)
+  stripePaymentId String?       @unique   // Riferimento alla transazione sul gateway (es. pi_12345 di Stripe)
+  receiptUrl       String?       // URL ricevuta per il Guest (il totale)
+  payoutInvoiceUrl String?       // URL prospetto per l'Host (il netto)
+  invoiceNumber   String?       @unique // Molto importante: salva un "numero fattura" sequenziale es. INV-2026-001
+  billingName      String?       // Nome usato per questa specifica fattura
+  billingAddress   String?       // Indirizzo usato per questa specifica fattura
+  billingTaxCode   String?       // CF/PIVA usato per questa specifica fattura
+  stripeTransferId String?       @unique   // Dati per la fattura Host (se l'host è un professionista/azienda) Riferimento al bonifico verso l'Host
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookingId       String        @unique // Relazione 1 a 1 con la prenotazione
+  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  payoutId        String?      // Opzionale: nullo finché il pagamento non viene messo in coda per un bonifico
+  payout          Payout?      @relation(fields: [payoutId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Payout {
+  id              String       @id @default(cuid())
+  amount          Float        // Totale del bonifico (somma di vari hostPayout)
+  currency        String       @default("EUR")
+  status          PayoutStatus @default(PENDING)
+  arrivalDate     DateTime?    // Quando i soldi dovrebbero arrivare sul conto
+  stripeTransferId String?     @unique // ID del trasferimento su Stripe Connect
+  hostId          String
+  host            User         @relation(fields: [hostId], references: [id])
+  payments        Payment[] // Un payout può includere molti pagamenti singoli
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  rating        Int
+  comment       String?  @db.Text
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId       String
+  space         Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+}
+
+model Conversation {
+  id          String    @id @default(cuid())
+  participants User[]   @relation("UserConversations") // Chi partecipa alla chat (Guest e Host)
+  messages     Message[]
+  bookingId    String?   @unique   // Opzionale: collega la chat a una prenotazione specifica per dare contesto
+  booking      Booking?  @relation(fields: [bookingId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  text           String       @db.Text
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  conversationId String   // A quale conversazione appartiene
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  read           Boolean      @default(false) // Stato del messaggio
+  createdAt      DateTime     @default(now())
+}
