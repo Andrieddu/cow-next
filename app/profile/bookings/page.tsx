@@ -1,8 +1,6 @@
-"use client";
-
 import React from "react";
 import Link from "next/link";
-import Image from "next/image"; // Aggiunto per l'immagine nello Sheet
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -24,8 +22,66 @@ import {
   MessageSquare,
   AlertTriangle,
 } from "lucide-react";
+import { format, isBefore, startOfDay } from "date-fns";
+import { it } from "date-fns/locale";
 
-export default function BookingsPage() {
+// 1. IMPORTIAMO IL SERVICE E I TIPI
+import { UserService } from "@/services/user-service";
+import { SpaceType, BookingStatus } from "@/generated/prisma/client";
+
+// --- HELPERS ---
+const formatSpaceType = (type: SpaceType) => {
+  const types: Record<SpaceType, string> = {
+    DESK: "Desk",
+    PRIVATE_OFFICE: "Ufficio Privato",
+    MEETING_ROOM: "Sala Meeting",
+    EVENT_SPACE: "Sala Eventi",
+  };
+  return types[type] || type;
+};
+
+const formatStatus = (status: BookingStatus) => {
+  switch (status) {
+    case "CONFIRMED":
+      return "Confermata";
+    case "PENDING":
+      return "In Attesa";
+    case "CANCELLED":
+      return "Annullata";
+    case "COMPLETED":
+      return "Completata";
+    default:
+      return status;
+  }
+};
+
+// 2. TRASFORMAZIONE IN SERVER COMPONENT (async)
+export default async function BookingsPage() {
+  // 3. RECUPERO DATI DAL DB (Luigi Verdi)
+  const currentUser = await UserService.getProfileWithBookings("seed-guest-1");
+
+  if (!currentUser) {
+    return (
+      <div className="p-20 text-center font-bold">
+        Utente non trovato. Fai il login.
+      </div>
+    );
+  }
+
+  // 4. LOGICA DI DIVISIONE PRENOTAZIONI (In arrivo vs Passate)
+  const allBookings = currentUser.bookings || [];
+  const today = startOfDay(new Date());
+
+  // In arrivo: Oggi o nel futuro
+  const upcomingBookings = allBookings.filter(
+    (b) => !isBefore(new Date(b.date), today),
+  );
+
+  // Passate: Nel passato
+  const pastBookings = allBookings.filter((b) =>
+    isBefore(new Date(b.date), today),
+  );
+
   return (
     <main className="flex flex-col w-full min-h-[calc(100vh-80px)] bg-secondary/5 pb-20">
       <div className="container max-w-4xl mx-auto px-6 pt-8 md:pt-12">
@@ -49,7 +105,6 @@ export default function BookingsPage() {
               </p>
             </div>
 
-            {/* Veri Tab interattivi di Shadcn */}
             <TabsList className="flex bg-background border border-border/50 rounded-xl p-1 shadow-sm h-auto w-fit">
               <TabsTrigger
                 value="in-arrivo"
@@ -73,340 +128,211 @@ export default function BookingsPage() {
             value="in-arrivo"
             className="mt-0 flex flex-col gap-6 focus-visible:outline-none"
           >
-            {/* CARD 1 (CON SHEET) */}
-            <Sheet>
-              <div className="bg-background rounded-[2rem] p-6 md:p-8 shadow-sm border border-border/50 flex flex-col md:flex-row items-start md:items-center gap-6 relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-2 bg-accent" />
-
-                <div className="bg-accent/10 rounded-2xl w-24 h-24 flex flex-col items-center justify-center shrink-0 border border-accent/20">
-                  <span className="text-sm font-bold text-accent uppercase tracking-widest">
-                    Ott
-                  </span>
-                  <span className="text-3xl font-bold text-foreground leading-none mt-1">
-                    15
-                  </span>
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="inline-flex items-center rounded-full border border-border/50 bg-secondary/5 px-3 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                      Sala Meeting
-                    </div>
-                    <span className="text-xs font-bold text-accent bg-accent/10 px-2 py-1 rounded-md">
-                      Confermata
-                    </span>
-                  </div>
-                  <h4 className="text-xl font-bold mb-2">
-                    Hub Innovazione Milano
-                  </h4>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm font-medium text-muted-foreground">
-                    <span className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-accent" /> 09:00 - 13:00 (4
-                      ore)
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-accent" /> Via Roma 10,
-                      Milano
-                    </span>
-                  </div>
-                </div>
-
-                {/* I bottoni ora sono Trigger per aprire lo Sheet */}
-                <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-border/50 md:pl-6">
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full rounded-xl font-bold border-border/50 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
-                    >
-                      Gestisci
-                    </Button>
-                  </SheetTrigger>
-                </div>
+            {upcomingBookings.length === 0 ? (
+              <div className="bg-background rounded-[2rem] p-12 text-center border-2 border-dashed border-border/50">
+                <p className="text-muted-foreground font-bold">
+                  Nessuna prenotazione in arrivo.
+                </p>
               </div>
+            ) : (
+              upcomingBookings.map((booking) => {
+                const space = booking.space;
+                const host = space?.host;
+                const month = format(new Date(booking.date), "MMM", {
+                  locale: it,
+                });
+                const day = format(new Date(booking.date), "dd");
 
-              {/* SHEET CONTENUTO - CARD 1 */}
-              <SheetContent className="w-full sm:max-w-md bg-background border-l border-border/50 overflow-y-auto z-[100] p-0 flex flex-col">
-                <SheetHeader className="text-left pt-8 px-6 sm:px-8 mb-6">
-                  <div className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-bold text-primary-foreground uppercase tracking-widest w-fit mb-4">
-                    Confermata
-                  </div>
-                  <SheetTitle className="text-3xl font-bold tracking-tight">
-                    Dettagli sessione
-                  </SheetTitle>
-                  <SheetDescription className="text-base font-medium">
-                    Tutto pronto per la tua giornata all'Hub Innovazione Milano.
-                  </SheetDescription>
-                </SheetHeader>
+                return (
+                  <Sheet key={booking.id}>
+                    <div className="bg-background rounded-[2rem] p-6 md:p-8 shadow-sm border border-border/50 flex flex-col md:flex-row items-start md:items-center gap-6 relative overflow-hidden">
+                      <div className="absolute left-0 top-0 bottom-0 w-2 bg-accent" />
 
-                <div className="px-6 sm:px-8 pb-8 space-y-8 flex-1">
-                  <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-border/50 shadow-sm">
-                    <Image
-                      src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80"
-                      alt="Space"
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                  </div>
-
-                  <div className="bg-secondary/5 border border-border/50 rounded-2xl p-6 space-y-6 shadow-sm">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
-                        Data e Ora
-                      </span>
-                      <span className="font-bold text-foreground">
-                        Giovedì 15 Ottobre • 09:00 - 13:00
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
-                        Indirizzo
-                      </span>
-                      <span className="font-bold text-foreground">
-                        Via Roma 10, Piano 2<br />
-                        20121 Milano
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
-                        Codice Prenotazione
-                      </span>
-                      <span className="font-mono font-bold text-foreground">
-                        #COW-98234-MIL
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between border-y border-border/50 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-full border border-border/50 bg-secondary/20 overflow-hidden shadow-sm">
-                        <Image
-                          src="https://github.com/shadcn.png"
-                          alt="Host"
-                          width={48}
-                          height={48}
-                          unoptimized
-                        />
+                      <div className="bg-accent/10 rounded-2xl w-24 h-24 flex flex-col items-center justify-center shrink-0 border border-accent/20">
+                        <span className="text-sm font-bold text-accent uppercase tracking-widest">
+                          {month}
+                        </span>
+                        <span className="text-3xl font-bold text-foreground leading-none mt-1">
+                          {day}
+                        </span>
                       </div>
-                      <div>
-                        <p className="font-bold text-sm">
-                          Ospitato da Copernico
-                        </p>
-                        <p className="text-xs text-muted-foreground font-medium text-accent">
-                          Superhost
-                        </p>
+
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="inline-flex items-center rounded-full border border-border/50 bg-secondary/5 px-3 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            {formatSpaceType(space?.type as SpaceType)}
+                          </div>
+                          {/* FIX: Badge card uguale alla sidebar */}
+                          <div
+                            className={cn(
+                              "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest",
+                              getStatusColor(booking.status),
+                            )}
+                          >
+                            {formatStatus(booking.status)}
+                          </div>
+                        </div>
+                        <h4 className="text-xl font-bold mb-2">
+                          {space?.title}
+                        </h4>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm font-medium text-muted-foreground">
+                          <span className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-accent" />{" "}
+                            {booking.startTime} - {booking.endTime}
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-accent" />{" "}
+                            {space?.address}, {space?.city}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-border/50 md:pl-6">
+                        <SheetTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full rounded-xl font-bold border-border/50 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
+                          >
+                            Gestisci
+                          </Button>
+                        </SheetTrigger>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full bg-accent/10 hover:bg-accent/20 text-accent"
-                    >
-                      <MessageSquare className="h-5 w-5" />
-                    </Button>
-                  </div>
 
-                  <div className="flex flex-col gap-3">
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
-                    >
-                      <Receipt className="h-5 w-5 text-muted-foreground" />{" "}
-                      Scarica Ricevuta
-                    </Button>
-                    <Link href="/spaces/1" className="w-full">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
-                      >
-                        <MapPin className="h-5 w-5 text-muted-foreground" />{" "}
-                        Rivedi annuncio
-                      </Button>
-                    </Link>
-                    <SheetClose asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start h-12 rounded-xl font-bold border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive gap-3 mt-4 shadow-sm"
-                      >
-                        <AlertTriangle className="h-5 w-5" /> Cancella
-                        Prenotazione
-                      </Button>
-                    </SheetClose>
-                  </div>
+                    <SheetContent className="w-full sm:max-w-md bg-background border-l border-border/50 overflow-y-auto z-[100] p-0 flex flex-col">
+                      <SheetHeader className="text-left pt-8 px-6 sm:px-8 mb-6">
+                        <div
+                          className={cn(
+                            "inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest w-fit mb-4",
+                            getStatusColor(booking.status),
+                          )}
+                        >
+                          {formatStatus(booking.status)}
+                        </div>
+                        <SheetTitle className="text-3xl font-bold tracking-tight">
+                          Dettagli sessione
+                        </SheetTitle>
+                        <SheetDescription className="text-base font-medium text-muted-foreground">
+                          Tutto pronto per la tua giornata all&apos;
+                          {space?.title}.
+                        </SheetDescription>
+                      </SheetHeader>
 
-                  <p className="text-[11px] text-muted-foreground text-center font-medium pt-2">
-                    Cancellazione gratuita disponibile fino al 14 Ottobre alle
-                    09:00.
-                  </p>
-                </div>
-              </SheetContent>
-            </Sheet>
+                      <div className="px-6 sm:px-8 pb-8 space-y-8 flex-1">
+                        <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-border/50 shadow-sm bg-muted">
+                          <Image
+                            src={space?.imageUrls[0] || ""}
+                            alt={space?.title || "Space Image"}
+                            fill
+                            unoptimized
+                            className="object-cover"
+                          />
+                        </div>
 
-            {/* CARD 2 (CON SHEET) */}
-            <Sheet>
-              <div className="bg-background rounded-[2rem] p-6 md:p-8 shadow-sm border border-border/50 flex flex-col md:flex-row items-start md:items-center gap-6 relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-2 bg-accent" />
+                        <div className="bg-secondary/5 border border-border/50 rounded-2xl p-6 space-y-6 shadow-sm">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
+                              Data e Ora
+                            </span>
+                            <span className="font-bold text-foreground">
+                              {format(new Date(booking.date), "EEEE dd MMMM", {
+                                locale: it,
+                              })}{" "}
+                              • {booking.startTime} - {booking.endTime}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
+                              Indirizzo
+                            </span>
+                            <span className="font-bold text-foreground">
+                              {space?.address}
+                              <br />
+                              {space?.city}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
+                              Codice Prenotazione
+                            </span>
+                            <span className="font-mono font-bold text-foreground uppercase">
+                              #{booking.id.split("-")[0]}
+                            </span>
+                          </div>
+                        </div>
 
-                <div className="bg-accent/10 rounded-2xl w-24 h-24 flex flex-col items-center justify-center shrink-0 border border-accent/20">
-                  <span className="text-sm font-bold text-accent uppercase tracking-widest">
-                    Ott
-                  </span>
-                  <span className="text-3xl font-bold text-foreground leading-none mt-1">
-                    22
-                  </span>
-                </div>
+                        <div className="flex items-center justify-between border-y border-border/50 py-6">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-full border border-border/50 bg-secondary/20 overflow-hidden shadow-sm relative">
+                              <Image
+                                src={
+                                  host?.image || "https://github.com/shadcn.png"
+                                }
+                                alt="Host"
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
+                            <div>
+                              <p className="font-bold text-sm">
+                                Ospitato da {host?.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground font-medium text-accent">
+                                Host Verificato
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full bg-accent/10 hover:bg-accent/20 text-accent"
+                          >
+                            <MessageSquare className="h-5 w-5" />
+                          </Button>
+                        </div>
 
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="inline-flex items-center rounded-full border border-border/50 bg-secondary/5 px-3 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                      Flex Desk
-                    </div>
-                    <span className="text-xs font-bold text-accent bg-accent/10 px-2 py-1 rounded-md">
-                      Confermata
-                    </span>
-                  </div>
-                  <h4 className="text-xl font-bold mb-2">Copernico Centrale</h4>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm font-medium text-muted-foreground">
-                    <span className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-accent" /> Intera Giornata
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-accent" /> Via Copernico
-                      38, Milano
-                    </span>
-                  </div>
-                </div>
+                        <div className="flex flex-col gap-3">
+                          {(booking.status === "CONFIRMED" ||
+                            booking.status === "COMPLETED") && (
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
+                            >
+                              <Receipt className="h-5 w-5 text-muted-foreground" />{" "}
+                              Scarica Ricevuta
+                            </Button>
+                          )}
 
-                <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-border/50 md:pl-6">
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full rounded-xl font-bold border-border/50 hover:bg-accent hover:text-accent-foreground hover:border-accent transition-colors"
-                    >
-                      Gestisci
-                    </Button>
-                  </SheetTrigger>
-                </div>
-              </div>
+                          <Link href={`/space/${space?.id}`} className="w-full">
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
+                            >
+                              <MapPin className="h-5 w-5 text-muted-foreground" />{" "}
+                              Rivedi annuncio
+                            </Button>
+                          </Link>
 
-              {/* SHEET CONTENUTO - CARD 2 */}
-              <SheetContent className="w-full sm:max-w-md bg-background border-l border-border/50 overflow-y-auto z-[100] p-0 flex flex-col">
-                <SheetHeader className="text-left pt-8 px-6 sm:px-8 mb-6">
-                  <div className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-bold text-primary-foreground uppercase tracking-widest w-fit mb-4">
-                    Confermata
-                  </div>
-                  <SheetTitle className="text-3xl font-bold tracking-tight">
-                    Dettagli sessione
-                  </SheetTitle>
-                  <SheetDescription className="text-base font-medium">
-                    Tutto pronto per la tua giornata al Copernico Centrale.
-                  </SheetDescription>
-                </SheetHeader>
-
-                <div className="px-6 sm:px-8 pb-8 space-y-8 flex-1">
-                  <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-border/50 shadow-sm">
-                    <Image
-                      src="https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?auto=format&fit=crop&q=80"
-                      alt="Space"
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                  </div>
-
-                  <div className="bg-secondary/5 border border-border/50 rounded-2xl p-6 space-y-6 shadow-sm">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
-                        Data e Ora
-                      </span>
-                      <span className="font-bold text-foreground">
-                        Giovedì 22 Ottobre • 09:00 - 18:00
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
-                        Indirizzo
-                      </span>
-                      <span className="font-bold text-foreground">
-                        Via Copernico 38, Piano Terra
-                        <br />
-                        20125 Milano
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
-                        Codice Prenotazione
-                      </span>
-                      <span className="font-mono font-bold text-foreground">
-                        #COW-11456-MIL
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between border-y border-border/50 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-full border border-border/50 bg-secondary/20 overflow-hidden shadow-sm">
-                        <Image
-                          src="https://github.com/shadcn.png"
-                          alt="Host"
-                          width={48}
-                          height={48}
-                          unoptimized
-                        />
+                          {(booking.status === "CONFIRMED" ||
+                            booking.status === "PENDING") && (
+                            <SheetClose asChild>
+                              <Button
+                                variant="outline"
+                                className="w-full justify-start h-12 rounded-xl font-bold border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive gap-3 mt-4 shadow-sm"
+                              >
+                                <AlertTriangle className="h-5 w-5" /> Cancella
+                                Prenotazione
+                              </Button>
+                            </SheetClose>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-sm">
-                          Ospitato da Copernico
-                        </p>
-                        <p className="text-xs text-muted-foreground font-medium text-accent">
-                          Superhost
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full bg-accent/10 hover:bg-accent/20 text-accent"
-                    >
-                      <MessageSquare className="h-5 w-5" />
-                    </Button>
-                  </div>
-
-                  <div className="flex flex-col gap-3">
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
-                    >
-                      <Receipt className="h-5 w-5 text-muted-foreground" />{" "}
-                      Scarica Ricevuta
-                    </Button>
-                    <Link href="/spaces/2" className="w-full">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
-                      >
-                        <MapPin className="h-5 w-5 text-muted-foreground" />{" "}
-                        Rivedi annuncio
-                      </Button>
-                    </Link>
-                    <SheetClose asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start h-12 rounded-xl font-bold border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive gap-3 mt-4 shadow-sm"
-                      >
-                        <AlertTriangle className="h-5 w-5" /> Cancella
-                        Prenotazione
-                      </Button>
-                    </SheetClose>
-                  </div>
-
-                  <p className="text-[11px] text-muted-foreground text-center font-medium pt-2">
-                    Cancellazione gratuita disponibile fino al 21 Ottobre alle
-                    09:00.
-                  </p>
-                </div>
-              </SheetContent>
-            </Sheet>
+                    </SheetContent>
+                  </Sheet>
+                );
+              })
+            )}
           </TabsContent>
 
           {/* =========================================
@@ -422,46 +348,68 @@ export default function BookingsPage() {
               </h2>
             </div>
 
-            <div className="flex flex-col gap-4 opacity-70 hover:opacity-100 transition-opacity duration-500">
-              {/* Card Passata */}
-              <div className="bg-background rounded-3xl p-5 shadow-sm border border-border/40 flex flex-col md:flex-row items-start md:items-center gap-6 grayscale hover:grayscale-0 transition-all">
-                <div className="bg-muted rounded-xl w-16 h-16 flex flex-col items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-muted-foreground uppercase">
-                    Set
-                  </span>
-                  <span className="text-xl font-bold text-foreground leading-none mt-1">
-                    05
-                  </span>
-                </div>
+            <div className="flex flex-col gap-4">
+              {pastBookings.length === 0 ? (
+                <p className="text-sm font-medium text-muted-foreground italic">
+                  Nessuna prenotazione passata.
+                </p>
+              ) : (
+                pastBookings.map((booking) => {
+                  const space = booking.space;
+                  const day = format(new Date(booking.date), "dd");
 
-                <div className="flex-1">
-                  <h4 className="text-lg font-bold">Talent Garden Calabiana</h4>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Ufficio Privato (2 posti) • 1 giorno
-                  </p>
-                </div>
+                  return (
+                    <div
+                      key={booking.id}
+                      className="bg-background rounded-3xl p-5 shadow-sm border border-border/40 flex flex-col md:flex-row items-start md:items-center gap-6 grayscale hover:grayscale-0 transition-all opacity-70 hover:opacity-100"
+                    >
+                      <div className="bg-muted rounded-xl w-16 h-16 flex flex-col items-center justify-center shrink-0">
+                        <span className="text-xs font-bold text-muted-foreground uppercase">
+                          {format(new Date(booking.date), "MMM", {
+                            locale: it,
+                          })}
+                        </span>
+                        <span className="text-xl font-bold text-foreground leading-none mt-1">
+                          {day}
+                        </span>
+                      </div>
 
-                <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 rounded-xl font-bold border-border/50 gap-2 h-10"
-                  >
-                    <Download className="h-4 w-4" /> Ricevuta
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="flex-1 rounded-xl font-bold gap-2 h-10"
-                  >
-                    <Star
-                      className="h-4 w-4 text-primary"
-                      fill="currentColor"
-                    />{" "}
-                    Recensisci
-                  </Button>
-                </div>
-              </div>
+                      <div className="flex-1">
+                        <h4 className="text-lg font-bold">{space?.title}</h4>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {formatSpaceType(space?.type as SpaceType)} •{" "}
+                          {space?.city}
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
+                        {(booking.status === "CONFIRMED" ||
+                          booking.status === "COMPLETED") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 rounded-xl font-bold border-border/50 gap-2 h-10"
+                          >
+                            <Download className="h-4 w-4" /> Ricevuta
+                          </Button>
+                        )}
+
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1 rounded-xl font-bold gap-2 h-10"
+                        >
+                          <Star
+                            className="h-4 w-4 text-primary"
+                            fill="currentColor"
+                          />{" "}
+                          Recensisci
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </TabsContent>
         </Tabs>
@@ -469,3 +417,24 @@ export default function BookingsPage() {
     </main>
   );
 }
+
+// Funzione helper cn
+function cn(...inputs: any[]) {
+  return inputs.filter(Boolean).join(" ");
+}
+
+// Funzione helper colori stati
+const getStatusColor = (status: BookingStatus) => {
+  switch (status) {
+    case "CONFIRMED":
+      return "bg-primary/10 text-primary-foreground border-primary/30";
+    case "PENDING":
+      return "bg-amber-500/10 text-amber-700 border-amber-500/30";
+    case "CANCELLED":
+      return "bg-destructive/10 text-destructive border-destructive/30";
+    case "COMPLETED":
+      return "bg-green-500/10 text-green-700 border-green-500/30";
+    default:
+      return "bg-secondary/10 text-foreground border-border/50";
+  }
+};
