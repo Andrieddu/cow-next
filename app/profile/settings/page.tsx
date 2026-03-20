@@ -1,6 +1,5 @@
-"use client";
-
 import Link from "next/link";
+import Image from "next/image"; // Ottimizzazione Next.js
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,17 +17,17 @@ import {
   Plus,
 } from "lucide-react";
 
-// IMPORT DATI MOCK
-import { mockUsers } from "@/lib/mock-data";
+// 1. IMPORTIAMO IL SERVICE REALE
+import { UserService } from "@/services/user-service";
 
-export default function SettingsPage() {
-  // Simuliamo l'utente loggato (Giulia Rossi, usr_guest1)
-  const currentUser = mockUsers.find((u) => u.id === "usr_guest1");
+export default async function SettingsPage() {
+  // 2. RECUPERO DATI DAL DB (Luigi Verdi)
+  const currentUser = await UserService.getUserById("seed-guest-1");
 
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-muted-foreground font-bold">
-        Utente non trovato. Effettua il login.
+        Utente non trovato nel database. Effettua il login.
       </div>
     );
   }
@@ -61,7 +60,6 @@ export default function SettingsPage() {
             <TabsList
               className="
               flex flex-row justify-start overflow-x-auto w-full h-auto p-1 bg-background border border-border/50 rounded-2xl col-span-1
-              [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
               lg:col-span-3 lg:flex-col lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none lg:gap-2 lg:sticky lg:top-28 lg:overflow-visible
             "
             >
@@ -76,7 +74,7 @@ export default function SettingsPage() {
                   value={tab.id}
                   className="
                     flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-muted-foreground transition-all
-                    data-[state=active]:bg-accent/10 data-[state=active]:text-accent data-[state=active]:shadow-none 
+                    data-[state=active]:bg-accent/10 data-[state=active]:text-accent
                     hover:bg-background/50 hover:text-foreground
                     shrink-0 justify-center
                     lg:w-full lg:justify-start lg:shrink-1
@@ -102,15 +100,17 @@ export default function SettingsPage() {
                     Informazioni Personali
                   </h2>
                   <form className="flex flex-col gap-8">
-                    {/* Immagine Profilo */}
+                    {/* Immagine Profilo - Usando Next Image per performance */}
                     <div className="flex items-center gap-6 pb-6 border-b border-border/50">
                       <div className="relative h-20 w-20 rounded-full bg-secondary/20 flex items-center justify-center overflow-hidden border-2 border-background shadow-sm shrink-0">
-                        <img
+                        <Image
                           src={
                             currentUser.image || "https://github.com/shadcn.png"
                           }
                           alt={`${currentUser.name} ${currentUser.surname}`}
-                          className="object-cover w-full h-full"
+                          fill
+                          className="object-cover"
+                          unoptimized
                         />
                       </div>
                       <div className="flex flex-col gap-2">
@@ -135,7 +135,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    {/* Campi Form Ristrutturati con <Field> e precompilati */}
+                    {/* Campi Form precompilati con dati dal DB */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <Field>
                         <FieldLabel
@@ -146,6 +146,7 @@ export default function SettingsPage() {
                         </FieldLabel>
                         <Input
                           id="nome"
+                          name="name"
                           type="text"
                           defaultValue={currentUser.name || ""}
                           className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
@@ -161,6 +162,7 @@ export default function SettingsPage() {
                         </FieldLabel>
                         <Input
                           id="cognome"
+                          name="surname"
                           type="text"
                           defaultValue={currentUser.surname || ""}
                           className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
@@ -176,12 +178,14 @@ export default function SettingsPage() {
                         </FieldLabel>
                         <Input
                           id="email"
+                          name="email"
                           type="email"
                           defaultValue={currentUser.email}
                           className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
+                          disabled // Email solitamente protetta o gestita via Auth
                         />
                         <FieldDescription className="px-1">
-                          Questa email verrà utilizzata per l'accesso e le
+                          Questa email verrà utilizzata per l accesso e le
                           ricevute.
                         </FieldDescription>
                       </Field>
@@ -195,6 +199,7 @@ export default function SettingsPage() {
                         </FieldLabel>
                         <Input
                           id="telefono"
+                          name="phone"
                           type="tel"
                           defaultValue={currentUser.phone || ""}
                           className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
@@ -204,7 +209,7 @@ export default function SettingsPage() {
 
                     <div className="pt-4 flex justify-end border-t border-border/50 mt-2">
                       <Button
-                        type="button"
+                        type="submit"
                         size="lg"
                         className="h-12 w-full md:w-auto px-8 rounded-xl font-bold shadow-lg shadow-primary/20 gap-2 transition-transform active:scale-95"
                       >
@@ -231,7 +236,6 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="flex flex-col gap-4">
-                    {/* Carta Salvata */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-border/50 rounded-2xl bg-secondary/5 hover:bg-secondary/10 transition-colors gap-4">
                       <div className="flex items-center gap-4">
                         <div className="h-12 w-16 bg-background border border-border/50 shadow-sm rounded-lg flex items-center justify-center shrink-0">
@@ -257,7 +261,6 @@ export default function SettingsPage() {
                       </Button>
                     </div>
 
-                    {/* Aggiungi Carta */}
                     <Button
                       variant="outline"
                       className="h-16 w-full md:w-fit px-6 rounded-2xl border-dashed border-2 border-border/60 text-muted-foreground font-bold hover:text-foreground hover:border-foreground/30 gap-2"
@@ -268,7 +271,8 @@ export default function SettingsPage() {
 
                   <div className="mt-10 pt-8 border-t border-border/50">
                     <h3 className="text-lg font-bold mb-4">
-                      Storico Fatturazione
+                      {" "}
+                      Storico Fatturazione{" "}
                     </h3>
                     <p className="text-sm font-medium text-muted-foreground">
                       Non ci sono fatture recenti da mostrare.
@@ -293,7 +297,6 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="flex flex-col gap-6">
-                    {/* Toggle 1 */}
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex flex-col">
                         <label
@@ -308,13 +311,14 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         id="prenotazioni"
-                        defaultChecked={currentUser.notifyBookings}
+                        defaultChecked={
+                          (currentUser as any).notifyBookings ?? true
+                        }
                       />
                     </div>
 
                     <div className="w-full h-px bg-border/50"></div>
 
-                    {/* Toggle 2 */}
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex flex-col">
                         <label
@@ -329,13 +333,14 @@ export default function SettingsPage() {
                       </div>
                       <Switch
                         id="promozioni"
-                        defaultChecked={currentUser.notifyPromos}
+                        defaultChecked={
+                          (currentUser as any).notifyPromos ?? false
+                        }
                       />
                     </div>
 
                     <div className="w-full h-px bg-border/50"></div>
 
-                    {/* Toggle 3 */}
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex flex-col">
                         <label
@@ -348,7 +353,10 @@ export default function SettingsPage() {
                           Avvisi urgenti direttamente sul tuo telefono.
                         </p>
                       </div>
-                      <Switch id="sms" defaultChecked={currentUser.notifySms} />
+                      <Switch
+                        id="sms"
+                        defaultChecked={(currentUser as any).notifySms ?? false}
+                      />
                     </div>
                   </div>
                 </div>
@@ -365,7 +373,8 @@ export default function SettingsPage() {
                       <Lock className="h-5 w-5 text-accent" />
                     </div>
                     <h2 className="text-2xl font-bold tracking-tight">
-                      Sicurezza
+                      {" "}
+                      Sicurezza{" "}
                     </h2>
                   </div>
 
