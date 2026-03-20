@@ -3,6 +3,24 @@ import { SpaceType } from "@/generated/prisma/client";
 
 export const SpaceService = {
   /**
+   * Recupera un singolo spazio tramite ID, includendo l'Host e le recensioni
+   */
+  getSpaceById: async (spaceId: string) => {
+    try {
+      return await prisma.space.findUnique({
+        where: { id: spaceId },
+        include: {
+          host: true,
+          reviews: true,
+        },
+      });
+    } catch (error) {
+      console.error("[DB Error] Errore recupero spazio:", error);
+      return null;
+    }
+  },
+
+  /**
    * Crea un nuovo annuncio (Space) nel database
    */
   createSpace: async (data: {
