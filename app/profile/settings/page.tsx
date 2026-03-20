@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
+// Rimosso l'import di Switch qui, perché ora lo usa il NotificationForm
 import { Field, FieldLabel, FieldDescription } from "@/components/ui/field";
 import {
   User,
@@ -18,8 +18,9 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { UserService } from "@/services/user-service";
 
-// IMPORTIAMO IL NOSTRO NUOVO COMPONENTE
+// IMPORTIAMO I NOSTRI COMPONENTI FORM
 import ProfileForm from "@/components/forms/ProfileForm";
+import NotificationForm from "@/components/forms/NotificationForm";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -92,7 +93,6 @@ export default async function SettingsPage() {
                     Informazioni Personali
                   </h2>
 
-                  {/* ECCO IL NOSTRO COMPONENTE INIETTATO QUI */}
                   <ProfileForm user={currentUser} />
                 </div>
               </TabsContent>
@@ -102,6 +102,7 @@ export default async function SettingsPage() {
                 value="pagamenti"
                 className="mt-0 focus-visible:outline-none flex flex-col gap-8"
               >
+                {/* ... (Contenuto Pagamenti Invariato) ... */}
                 <div className="bg-background rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-border/50">
                   <div className="flex items-center gap-3 mb-8">
                     <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -148,8 +149,7 @@ export default async function SettingsPage() {
 
                   <div className="mt-10 pt-8 border-t border-border/50">
                     <h3 className="text-lg font-bold mb-4">
-                      {" "}
-                      Storico Fatturazione{" "}
+                      Storico Fatturazione
                     </h3>
                     <p className="text-sm font-medium text-muted-foreground">
                       Non ci sono fatture recenti da mostrare.
@@ -165,77 +165,20 @@ export default async function SettingsPage() {
               >
                 <div className="bg-background rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-border/50">
                   <div className="flex items-center gap-3 mb-8">
-                    <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                      <Bell className="h-5 w-5 text-orange-500" />
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Bell className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="text-2xl font-bold tracking-tight">
                       Preferenze Notifiche
                     </h2>
                   </div>
 
-                  <div className="flex flex-col gap-6">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor="prenotazioni"
-                          className="font-bold text-foreground cursor-pointer"
-                        >
-                          Prenotazioni e Aggiornamenti
-                        </label>
-                        <p className="text-xs md:text-sm font-medium text-muted-foreground">
-                          Ricevi email per conferme, modifiche o cancellazioni.
-                        </p>
-                      </div>
-                      <Switch
-                        id="prenotazioni"
-                        defaultChecked={
-                          (currentUser as any).notifyBookings ?? true
-                        }
-                      />
-                    </div>
-
-                    <div className="w-full h-px bg-border/50"></div>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor="promozioni"
-                          className="font-bold text-foreground cursor-pointer"
-                        >
-                          Promozioni e Offerte
-                        </label>
-                        <p className="text-xs md:text-sm font-medium text-muted-foreground">
-                          Ricevi sconti esclusivi e novità sugli spazi.
-                        </p>
-                      </div>
-                      <Switch
-                        id="promozioni"
-                        defaultChecked={
-                          (currentUser as any).notifyPromos ?? false
-                        }
-                      />
-                    </div>
-
-                    <div className="w-full h-px bg-border/50"></div>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor="sms"
-                          className="font-bold text-foreground cursor-pointer"
-                        >
-                          Notifiche SMS
-                        </label>
-                        <p className="text-xs md:text-sm font-medium text-muted-foreground">
-                          Avvisi urgenti direttamente sul tuo telefono.
-                        </p>
-                      </div>
-                      <Switch
-                        id="sms"
-                        defaultChecked={(currentUser as any).notifySms ?? false}
-                      />
-                    </div>
-                  </div>
+                  {/* ECCO IL COMPONENTE INIETTATO QUI - SOSTITUISCE I VECCHI SWITCH */}
+                  {/* Nota: L'errore che potresti avere su currentUser è perché TypeScript pensa 
+                      che currentUser non abbia le proprietà notifyBookings. 
+                      Lo forziamo a 'any' temporaneamente se il tuo schema Prisma non è ancora aggiornato 
+                      o lo passiamo così com'è. */}
+                  <NotificationForm user={currentUser as any} />
                 </div>
               </TabsContent>
 
@@ -244,14 +187,14 @@ export default async function SettingsPage() {
                 value="sicurezza"
                 className="mt-0 focus-visible:outline-none"
               >
+                {/* ... (Contenuto Sicurezza Invariato) ... */}
                 <div className="bg-background rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-border/50">
                   <div className="flex items-center gap-3 mb-8">
                     <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
                       <Lock className="h-5 w-5 text-accent" />
                     </div>
                     <h2 className="text-2xl font-bold tracking-tight">
-                      {" "}
-                      Sicurezza{" "}
+                      Sicurezza
                     </h2>
                   </div>
 

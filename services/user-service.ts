@@ -43,7 +43,7 @@ export const UserService = {
   },
 
   /**
-   * Aggiorna il profilo utente.
+   * Aggiorna il profilo utente (dati anagrafici).
    */
   updateProfile: async (
     id: string,
@@ -56,6 +56,31 @@ export const UserService = {
       });
     } catch (error) {
       console.error(`[DB Error] Impossibile aggiornare l'utente ${id}:`, error);
+      throw new Error("DATABASE_ERROR");
+    }
+  },
+
+  /**
+   * Aggiorna le preferenze di notifica dell'utente.
+   */
+  updateNotifications: async (
+    id: string,
+    data: {
+      notifyBookings: boolean;
+      notifyPromos: boolean;
+      notifySms: boolean;
+    },
+  ) => {
+    try {
+      return await prisma.user.update({
+        where: { id },
+        data,
+      });
+    } catch (error) {
+      console.error(
+        `[DB Error] Impossibile aggiornare le notifiche per ${id}:`,
+        error,
+      );
       throw new Error("DATABASE_ERROR");
     }
   },

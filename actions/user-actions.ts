@@ -87,3 +87,53 @@ export async function updateUserProfileAction(
     };
   }
 }
+
+export async function updateNotificationsAction(
+  userId: string,
+  prevState: any,
+  formData: FormData,
+) {
+  // --- AUTH REALE ---
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Controllo di sicurezza: devi essere loggato e l'ID deve corrispondere
+  if (!user || user.id !== userId) {
+    return { success: false, status: 401, error: "Non autorizzato." };
+  }
+
+  // --- LETTURA DATI DAL FORM ---
+  // Gli switch (checkbox) HTML inviano la stringa "on" se sono attivi.
+  // Se sono spenti, non inviano nulla, quindi il controllo restituisce false.
+  const notifyBookings = formData.get("notifyBookings") === "on";
+  const notifyPromos = formData.get("notifyPromos") === "on";
+  const notifySms = formData.get("notifySms") === "on";
+
+  // --- ESECUZIONE ---
+  try {
+    // Usiamo il UserService per mantenere l'architettura pulita
+    await UserService.updateNotifications(userId, {
+      notifyBookings,
+      notifyPromos,
+      notifySms,
+    });
+
+    // Diciamo a Next.js di aggiornare la pagina per mostrare i nuovi dati
+    revalidatePath("/profile/settings");
+
+    return {
+      success: true,
+      status: 200,
+      message: "Preferenze di notifica salvate con successo!",
+    };
+  } catch (error) {
+    console.error("[NotificationsAction Error]:", error);
+    return {
+      success: false,
+      status: 500,
+      error: "Impossibile salvare le preferenze. Riprova.",
+    };
+  }
+}
