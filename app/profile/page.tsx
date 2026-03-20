@@ -226,24 +226,30 @@ export default async function ProfilePage() {
               </div>
             </div>
 
-            <div className="bg-accent/5 border border-accent/20 rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden group">
-              <div className="absolute -right-6 -top-6 w-24 h-24 bg-accent/20 rounded-full blur-2xl group-hover:bg-accent/30 transition-colors duration-500" />
-              <h3 className="text-xl font-bold tracking-tight mb-2 text-foreground relative z-10">
-                Hai uno spazio libero?
-              </h3>
-              <p className="text-muted-foreground font-medium text-sm mb-6 relative z-10">
-                Metti a rendita la tua scrivania o sala meeting. Diventa Host e
-                inizia a guadagnare oggi stesso.
-              </p>
-              <Link href="/host/create" className="relative z-10 w-full block">
-                <Button
-                  variant="outline"
-                  className="w-full h-12 rounded-xl font-bold border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground transition-all shadow-sm"
+            {/* VISIBILE SOLO SE HOST O ADMIN */}
+            {isHost && (
+              <div className="bg-accent/5 border border-accent/20 rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden group">
+                <div className="absolute -right-6 -top-6 w-24 h-24 bg-accent/20 rounded-full blur-2xl group-hover:bg-accent/30 transition-colors duration-500" />
+                <h3 className="text-xl font-bold tracking-tight mb-2 text-foreground relative z-10">
+                  Hai uno spazio libero?
+                </h3>
+                <p className="text-muted-foreground font-medium text-sm mb-6 relative z-10">
+                  Metti a rendita la tua scrivania o sala meeting. Diventa Host
+                  e inizia a guadagnare oggi stesso.
+                </p>
+                <Link
+                  href="/host/create"
+                  className="relative z-10 w-full block"
                 >
-                  Aggiungi uno spazio
-                </Button>
-              </Link>
-            </div>
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 rounded-xl font-bold border-accent/50 text-accent hover:bg-accent hover:text-accent-foreground transition-all shadow-sm"
+                  >
+                    Aggiungi uno spazio
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* COLONNA DESTRA: Prenotazioni Dinamiche */}
