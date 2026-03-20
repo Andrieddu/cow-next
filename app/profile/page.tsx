@@ -94,6 +94,11 @@ export default async function ProfilePage() {
   // 4. RECUPERO DATI DAL DB TRAMITE L'ID DI SUPABASE
   const currentUser = await UserService.getProfileWithBookings(user.id);
 
+  // --- LOGICA DINAMICA PER IL TASTO HOST ---
+  const isHost = currentUser?.role === "HOST" || currentUser?.role === "ADMIN";
+  const hostButtonText = isHost ? "Passa a Modalità Host" : "Diventa Host";
+  const hostButtonLink = isHost ? "/host/dashboard" : "/become-host";
+
   // Fallback in caso di latenza del trigger o disallineamento
   if (!currentUser) {
     return (
@@ -138,7 +143,11 @@ export default async function ProfilePage() {
 
           <div className="flex-1 text-center md:text-left pt-2">
             <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold text-primary-foreground uppercase tracking-widest mb-3">
-              Membro {currentUser.role === "USER" ? "Base" : currentUser.role}
+              {currentUser.role === "ADMIN"
+                ? "Amministratore"
+                : currentUser.role === "HOST"
+                  ? "Host Verificato"
+                  : "Membro Base"}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2">
               {currentUser.name} {currentUser.surname}
@@ -149,9 +158,9 @@ export default async function ProfilePage() {
           </div>
 
           <div className="flex flex-col gap-3 w-full md:w-64 mt-4 md:mt-0">
-            <Link href="/host/dashboard" className="w-full">
+            <Link href={hostButtonLink} className="w-full">
               <Button className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
-                Passa a Modalità Host
+                {hostButtonText}
               </Button>
             </Link>
             <Link href="/messages" className="w-full">
