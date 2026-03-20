@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image"; // Ottimizzazione Next.js
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,24 +9,35 @@ import {
   CreditCard,
   Bell,
   Shield,
-  Camera,
-  Save,
   ArrowLeft,
   Lock,
   Plus,
 } from "lucide-react";
 
-// 1. IMPORTIAMO IL SERVICE REALE
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 import { UserService } from "@/services/user-service";
 
+// IMPORTIAMO IL NOSTRO NUOVO COMPONENTE
+import ProfileForm from "@/components/forms/ProfileForm";
+
 export default async function SettingsPage() {
-  // 2. RECUPERO DATI DAL DB (Luigi Verdi)
-  const currentUser = await UserService.getUserById("seed-guest-1");
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    redirect("/login");
+  }
+
+  const currentUser = await UserService.getUserById(user.id);
 
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-muted-foreground font-bold">
-        Utente non trovato nel database. Effettua il login.
+        Sincronizzazione profilo in corso. Ricarica la pagina.
       </div>
     );
   }
@@ -35,7 +45,6 @@ export default async function SettingsPage() {
   return (
     <main className="flex flex-col w-full min-h-[calc(100vh-80px)] bg-secondary/5 pb-20">
       <div className="container max-w-7xl mx-auto px-6 pt-8 md:pt-12">
-        {/* Pulsante Indietro */}
         <Link
           href="/profile"
           className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-accent transition-colors mb-8 w-fit"
@@ -54,15 +63,7 @@ export default async function SettingsPage() {
 
         <Tabs defaultValue="account" className="w-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-            {/* =========================================
-                SIDEBAR (TabsList)
-                ========================================= */}
-            <TabsList
-              className="
-              flex flex-row justify-start overflow-x-auto w-full h-auto p-1 bg-background border border-border/50 rounded-2xl col-span-1
-              lg:col-span-3 lg:flex-col lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none lg:gap-2 lg:sticky lg:top-28 lg:overflow-visible
-            "
-            >
+            <TabsList className="flex flex-row justify-start overflow-x-auto w-full h-auto p-1 bg-background border border-border/50 rounded-2xl col-span-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] lg:col-span-3 lg:flex-col lg:bg-transparent lg:border-none lg:p-0 lg:shadow-none lg:gap-2 lg:sticky lg:top-28 lg:overflow-visible">
               {[
                 { id: "account", label: "Account", icon: User },
                 { id: "pagamenti", label: "Pagamenti", icon: CreditCard },
@@ -72,13 +73,7 @@ export default async function SettingsPage() {
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="
-                    flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-muted-foreground transition-all
-                    data-[state=active]:bg-accent/10 data-[state=active]:text-accent
-                    hover:bg-background/50 hover:text-foreground
-                    shrink-0 justify-center
-                    lg:w-full lg:justify-start lg:shrink-1
-                  "
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-muted-foreground transition-all data-[state=active]:bg-accent/10 data-[state=active]:text-accent hover:bg-background/50 hover:text-foreground shrink-0 justify-center lg:w-full lg:justify-start lg:shrink-1"
                 >
                   <tab.icon className="h-5 w-5 shrink-0" />
                   <span>{tab.label}</span>
@@ -86,9 +81,6 @@ export default async function SettingsPage() {
               ))}
             </TabsList>
 
-            {/* =========================================
-                AREA CONTENUTO
-                ========================================= */}
             <div className="col-span-1 lg:col-span-9 w-full flex flex-col gap-8">
               {/* === SCHEDA ACCOUNT === */}
               <TabsContent
@@ -99,124 +91,9 @@ export default async function SettingsPage() {
                   <h2 className="text-2xl font-bold tracking-tight mb-8">
                     Informazioni Personali
                   </h2>
-                  <form className="flex flex-col gap-8">
-                    {/* Immagine Profilo - Usando Next Image per performance */}
-                    <div className="flex items-center gap-6 pb-6 border-b border-border/50">
-                      <div className="relative h-20 w-20 rounded-full bg-secondary/20 flex items-center justify-center overflow-hidden border-2 border-background shadow-sm shrink-0">
-                        <Image
-                          src={
-                            currentUser.image || "https://github.com/shadcn.png"
-                          }
-                          alt={`${currentUser.name} ${currentUser.surname}`}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex flex-wrap gap-3">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="rounded-xl font-bold border-border/50 hover:bg-secondary/10 hover:text-accent gap-2"
-                          >
-                            <Camera className="h-4 w-4" /> Cambia Foto
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="rounded-xl font-bold text-muted-foreground hover:text-destructive transition-colors"
-                          >
-                            Rimuovi
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Campi Form precompilati con dati dal DB */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Field>
-                        <FieldLabel
-                          htmlFor="nome"
-                          className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80 px-1"
-                        >
-                          Nome
-                        </FieldLabel>
-                        <Input
-                          id="nome"
-                          name="name"
-                          type="text"
-                          defaultValue={currentUser.name || ""}
-                          className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
-                        />
-                      </Field>
-
-                      <Field>
-                        <FieldLabel
-                          htmlFor="cognome"
-                          className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80 px-1"
-                        >
-                          Cognome
-                        </FieldLabel>
-                        <Input
-                          id="cognome"
-                          name="surname"
-                          type="text"
-                          defaultValue={currentUser.surname || ""}
-                          className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
-                        />
-                      </Field>
-
-                      <Field className="md:col-span-2">
-                        <FieldLabel
-                          htmlFor="email"
-                          className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80 px-1"
-                        >
-                          Indirizzo Email
-                        </FieldLabel>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          defaultValue={currentUser.email}
-                          className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
-                          disabled // Email solitamente protetta o gestita via Auth
-                        />
-                        <FieldDescription className="px-1">
-                          Questa email verrà utilizzata per l accesso e le
-                          ricevute.
-                        </FieldDescription>
-                      </Field>
-
-                      <Field className="md:col-span-2">
-                        <FieldLabel
-                          htmlFor="telefono"
-                          className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80 px-1"
-                        >
-                          Numero di Telefono
-                        </FieldLabel>
-                        <Input
-                          id="telefono"
-                          name="phone"
-                          type="tel"
-                          defaultValue={currentUser.phone || ""}
-                          className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20 font-medium"
-                        />
-                      </Field>
-                    </div>
-
-                    <div className="pt-4 flex justify-end border-t border-border/50 mt-2">
-                      <Button
-                        type="submit"
-                        size="lg"
-                        className="h-12 w-full md:w-auto px-8 rounded-xl font-bold shadow-lg shadow-primary/20 gap-2 transition-transform active:scale-95"
-                      >
-                        <Save className="h-5 w-5" /> Salva modifiche
-                      </Button>
-                    </div>
-                  </form>
+                  {/* ECCO IL NOSTRO COMPONENTE INIETTATO QUI */}
+                  <ProfileForm user={currentUser} />
                 </div>
               </TabsContent>
 
