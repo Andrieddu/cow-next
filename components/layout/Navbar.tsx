@@ -69,12 +69,9 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-4 border-l pl-6 ml-2 border-border/60">
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="font-bold">
-                Accedi
-              </Button>
-            </Link>
-
+            <Button asChild variant="ghost" size="sm" className="font-bold">
+              <Link href="/login">Accedi</Link>
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-9 w-9 border cursor-pointer hover:ring-2 hover:ring-accent/20 transition-all outline-none">
@@ -95,21 +92,16 @@ export default function Navbar() {
                   Il mio Account
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-
-                {/* Link Profilo */}
-                <Link href="/profile">
-                  <DropdownMenuItem className="cursor-pointer py-2.5">
+                <DropdownMenuItem asChild className="cursor-pointer py-2.5">
+                  <Link href="/profile">
                     <User className="mr-2 h-4 w-4" /> Profilo
-                  </DropdownMenuItem>
-                </Link>
-
-                {/* Link Impostazioni */}
-                <Link href="/profile/settings">
-                  <DropdownMenuItem className="cursor-pointer py-2.5">
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer py-2.5">
+                  <Link href="/profile/settings">
                     <Settings className="mr-2 h-4 w-4" /> Impostazioni
-                  </DropdownMenuItem>
-                </Link>
-
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer font-bold py-2.5">
                   <LogOut className="mr-2 h-4 w-4" /> Esci
@@ -191,28 +183,30 @@ export default function Navbar() {
                 </div>
 
                 <div className="grid gap-3">
-                  <Link href="/profile" onClick={() => setIsOpen(false)}>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full justify-start gap-4 rounded-xl font-bold"
-                    >
-                      <User className="h-5 w-5 opacity-70" /> Profilo
-                    </Button>
-                  </Link>
-
-                  <Link
-                    href="/profile/settings"
-                    onClick={() => setIsOpen(false)}
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="w-full justify-start gap-4 rounded-xl font-bold"
                   >
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full justify-start gap-4 rounded-xl font-bold"
+                    <Link href="/profile" onClick={() => setIsOpen(false)}>
+                      <User className="h-5 w-5 opacity-70" /> Profilo
+                    </Link>
+                  </Button>
+
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="w-full justify-start gap-4 rounded-xl font-bold"
+                  >
+                    <Link
+                      href="/profile/settings"
+                      onClick={() => setIsOpen(false)}
                     >
                       <Settings className="h-5 w-5 opacity-70" /> Impostazioni
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
 
                   <Button
                     variant="destructive"

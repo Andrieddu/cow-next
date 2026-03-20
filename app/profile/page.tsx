@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useMemo } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -27,33 +25,25 @@ import {
   Receipt,
   MessageSquare,
   AlertTriangle,
-  ArrowLeft,
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
-// IMPORT DATI MOCK
-import {
-  mockUsers,
-  getBookingsWithSpace,
-  SpaceType,
-  BookingStatus,
-} from "@/lib/mock-data";
+// 1. IMPORTIAMO IL SERVICE E I TIPI DI PRISMA AL POSTO DEL MOCK DATA
+import { UserService } from "@/services/user-service";
+import { SpaceType, BookingStatus } from "@/generated/prisma/client";
 
 // --- HELPERS ---
-
 const formatSpaceType = (type: SpaceType) => {
   const types: Record<SpaceType, string> = {
-    FLEX_DESK: "Flex Desk",
-    FIXED_DESK: "Scrivania Fissa",
+    DESK: "Desk",
     PRIVATE_OFFICE: "Ufficio Privato",
     MEETING_ROOM: "Sala Meeting",
-    PODCAST_ROOM: "Sala Podcast",
+    EVENT_SPACE: "Sala Eventi",
   };
   return types[type] || type;
 };
 
-// Funzione per tradurre gli status dal mock data (es. "CONFIRMED" -> "Confermata")
 const formatStatus = (status: BookingStatus) => {
   switch (status) {
     case "CONFIRMED":
@@ -84,18 +74,10 @@ const getStatusColor = (status: BookingStatus) => {
   }
 };
 
-export default function ProfilePage() {
-  // Simuliamo l'utente loggato (Giulia Rossi, usr_guest1)
-  const currentUser = mockUsers.find((u) => u.id === "usr_guest1");
-
-  // Otteniamo le sue prenotazioni tramite l'helper del mock-data
-  const userBookings = useMemo(() => {
-    if (!currentUser) return [];
-    // getBookingsWithSpace unisce i dati della prenotazione a quelli dello spazio
-    return getBookingsWithSpace(currentUser.id).sort(
-      (a, b) => a.date.getTime() - b.date.getTime(),
-    );
-  }, [currentUser]);
+// 2. COMPONENTE SERVER (async, niente "use client")
+export default async function ProfilePage() {
+  // 3. RECUPERO DATI DAL DB (Usiamo Luigi Verdi dal seed)
+  const currentUser = await UserService.getProfileWithBookings("seed-guest-1");
 
   if (!currentUser) {
     return (
@@ -104,6 +86,9 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  // Estraiamo le prenotazioni per mantenere la stessa variabile che usavi tu
+  const userBookings = currentUser.bookings || [];
 
   return (
     <main className="flex flex-col w-full min-h-[calc(100vh-80px)] bg-secondary/5 pb-20">
@@ -263,10 +248,11 @@ export default function ProfilePage() {
             ) : (
               userBookings.map((booking) => {
                 const space = booking.space;
-                // Se lo spazio è stato cancellato dal db (improbabile nel mock, ma buona pratica)
+                // Se lo spazio è stato cancellato dal db
                 if (!space) return null;
 
-                const host = mockUsers.find((u) => u.id === space.hostId);
+                // 4. L'host ora arriva dal DB tramite l'include di Prisma!
+                const host = space.host;
 
                 const monthShort = format(booking.date, "MMM", { locale: it });
                 const day = format(booking.date, "dd");
@@ -430,7 +416,8 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex flex-col gap-3">
-                          {booking.status === "CONFIRMED" && (
+                          {(booking.status === "CONFIRMED" ||
+                            booking.status === "COMPLETED") && (
                             <Button
                               variant="outline"
                               className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
@@ -439,6 +426,7 @@ export default function ProfilePage() {
                               Scarica Ricevuta
                             </Button>
                           )}
+
                           <Link href={`/space/${space.id}`} className="w-full">
                             <Button
                               variant="outline"
