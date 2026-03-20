@@ -1,10 +1,9 @@
-"use client";
-
-import React, { useMemo } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { redirect } from "next/navigation";
 import {
   TrendingUp,
   Calendar as CalendarIcon,
@@ -16,7 +15,6 @@ import {
   ArrowRight,
   MoreHorizontal,
   MapPin,
-  Clock,
   Users,
 } from "lucide-react";
 
@@ -24,78 +22,71 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// IMPORT DATI MOCK
-import {
-  mockUsers,
-  getSpacesWithAggregates,
-  mockBookings,
-  mockReviews,
-} from "@/lib/mock-data";
+// IMPORT DATABASE E AUTH REALI
+import { createClient } from "@/utils/supabase/server";
+import { HostService } from "@/services/host-service";
+import { UserService } from "@/services/user-service";
 
-export default function HostDashboardPage() {
-  // Simuliamo l'Host loggato (Marco Bianchi)
-  const currentHost = mockUsers.find((u) => u.id === "usr_host1");
+export default async function HostDashboardPage() {
+  // 1. AUTENTICAZIONE
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // Tutti gli spazi con aggregati (rating, etc.) filtrati per questo Host
-  const hostSpaces = useMemo(() => {
-    if (!currentHost) return [];
-    return getSpacesWithAggregates().filter((s) => s.hostId === currentHost.id);
-  }, [currentHost]);
+  if (!user) {
+    redirect("/login");
+  }
 
-  // Tutte le prenotazioni relative agli spazi di questo Host
-  const hostBookings = useMemo(() => {
-    const spaceIds = hostSpaces.map((s) => s.id);
-    return mockBookings.filter((b) => spaceIds.includes(b.spaceId));
-  }, [hostSpaces]);
+  const currentUser = await UserService.getUserById(user.id);
+  if (currentUser?.role !== "HOST" && currentUser?.role !== "ADMIN") {
+    redirect("/profile"); // Se non sei Host, fuori da qui!
+  }
 
-  // --- CALCOLI STATISTICHE ---
+  // 2. RECUPERO DATI REALI DAL DATABASE
+  const hostSpaces = await HostService.getDashboardData(user.id);
 
-  // 1. Guadagni (Somma totalPrice delle prenotazioni CONFIRMED o COMPLETED)
-  const totalEarnings = useMemo(() => {
-    return hostBookings
-      .filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED")
-      .reduce((sum, b) => sum + b.totalPrice, 0);
-  }, [hostBookings]);
+  // 3. CALCOLI STATISTICHE (Eseguiti alla velocità della luce sul server)
 
-  // 2. Numero prenotazioni attive/confermate
+  // Appiattiamo tutte le prenotazioni in un unico array e aggiungiamo le info dello spazio
+  const hostBookings = hostSpaces.flatMap((space) =>
+    space.bookings.map((booking) => ({
+      ...booking,
+      space, // Alleghiamo le info dello spazio alla prenotazione
+      guest: booking.user, // Rinominiamo 'user' in 'guest' per chiarezza
+    })),
+  );
+
+  // Guadagni (Somma totalPrice delle prenotazioni CONFIRMED o COMPLETED)
+  const totalEarnings = hostBookings
+    .filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED")
+    .reduce((sum, b) => sum + b.totalPrice, 0);
+
+  // Numero prenotazioni attive/confermate
   const totalBookingsCount = hostBookings.filter(
     (b) => b.status !== "CANCELLED",
   ).length;
 
-  // 3. Media recensioni dell'host
-  // Rimuoviamo useMemo: il React Compiler lo ottimizzerà da solo sotto il cofano
-  const hostAverageRating = (() => {
-    const spaceIds = hostSpaces.map((s) => s.id);
-    const reviews = mockReviews.filter((r) => spaceIds.includes(r.spaceId));
-
-    if (reviews.length === 0) return "0.00";
-
-    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-    return (sum / reviews.length).toFixed(2);
-  })();
-
-  // --- FILTRI ---
+  // Media recensioni dell'host
+  const allReviews = hostSpaces.flatMap((space) => space.reviews);
+  const hostAverageRating =
+    allReviews.length === 0
+      ? "0.00"
+      : (
+          allReviews.reduce((acc, r) => acc + r.rating, 0) / allReviews.length
+        ).toFixed(2);
 
   // Richieste in sospeso (PENDING)
-  const pendingRequests = useMemo(() => {
-    return hostBookings.filter((b) => b.status === "PENDING");
-  }, [hostBookings]);
+  const pendingRequests = hostBookings.filter((b) => b.status === "PENDING");
 
-  // Prossimi arrivi (Confermati)
-  const upcomingArrivals = useMemo(() => {
-    return hostBookings
-      .filter((b) => b.status === "CONFIRMED" && b.date >= new Date())
-      .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .slice(0, 3); // Prendi i primi 3
-  }, [hostBookings]);
-
-  if (!currentHost) {
-    return (
-      <div className="flex items-center justify-center min-h-screen font-bold text-muted-foreground">
-        Nessun Host trovato.
-      </div>
-    );
-  }
+  // Prossimi arrivi (Confermati, futuri o di oggi, presi i primi 3)
+  const upcomingArrivals = hostBookings
+    .filter(
+      (b) =>
+        b.status === "CONFIRMED" &&
+        new Date(b.date) >= new Date(new Date().setHours(0, 0, 0, 0)),
+    )
+    .slice(0, 3);
 
   return (
     <main className="flex flex-col w-full min-h-screen bg-secondary/5 pb-20">
@@ -125,7 +116,7 @@ export default function HostDashboardPage() {
       <div className="container max-w-7xl mx-auto px-6 pt-10">
         {/* 2. STATISTICHE MENSILI */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {/* Guadagni (Dinamico) */}
+          {/* Guadagni */}
           <Link href="/host/earnings" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -147,7 +138,7 @@ export default function HostDashboardPage() {
             </div>
           </Link>
 
-          {/* Prenotazioni (Dinamico) */}
+          {/* Prenotazioni */}
           <Link href="/host/bookings" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -169,7 +160,7 @@ export default function HostDashboardPage() {
             </div>
           </Link>
 
-          {/* Messaggi */}
+          {/* Messaggi (Ancora fittizio, lo collegheremo dopo) */}
           <Link href="/messages" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -182,7 +173,7 @@ export default function HostDashboardPage() {
               </div>
               <div>
                 <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
-                  2
+                  0
                 </h2>
                 <p className="text-sm font-medium text-muted-foreground mt-1 flex items-center gap-1">
                   Vai alla posta <ArrowRight className="h-3 w-3" />
@@ -191,7 +182,7 @@ export default function HostDashboardPage() {
             </div>
           </Link>
 
-          {/* Valutazione Media (Dinamica) */}
+          {/* Valutazione Media */}
           <Link href="/host/reviews" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -218,7 +209,7 @@ export default function HostDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* COLONNA SINISTRA: Richieste e Attività */}
           <div className="lg:col-span-8 space-y-10">
-            {/* Sezione Richieste in sospeso (Dinamica) */}
+            {/* Sezione Richieste in sospeso */}
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold tracking-tight">
@@ -234,81 +225,73 @@ export default function HostDashboardPage() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {pendingRequests.map((request) => {
-                    const space = hostSpaces.find(
-                      (s) => s.id === request.spaceId,
-                    );
-                    const guest = mockUsers.find(
-                      (u) => u.id === request.userId,
-                    ); // Teoricamente chi ha prenotato
-                    if (!space || !guest) return null;
+                  {pendingRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="bg-background rounded-[2rem] p-6 shadow-sm border-2 border-accent/20 flex flex-col sm:flex-row gap-6 items-start relative overflow-hidden"
+                    >
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-accent" />
 
-                    return (
-                      <div
-                        key={request.id}
-                        className="bg-background rounded-[2rem] p-6 shadow-sm border-2 border-accent/20 flex flex-col sm:flex-row gap-6 items-start relative overflow-hidden"
-                      >
-                        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-accent" />
+                      <div className="flex flex-col items-center gap-2 shrink-0 sm:w-24">
+                        <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
+                          <AvatarImage src={request.guest?.image || ""} />
+                          <AvatarFallback>
+                            {request.guest?.name?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs font-bold text-center truncate w-full">
+                          {request.guest?.name}{" "}
+                          {request.guest?.surname?.charAt(0)}.
+                        </span>
+                      </div>
 
-                        <div className="flex flex-col items-center gap-2 shrink-0 sm:w-24">
-                          <Avatar className="h-16 w-16 border-2 border-background shadow-sm">
-                            <AvatarImage src={guest.image || ""} />
-                            <AvatarFallback>
-                              {guest.name?.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs font-bold text-center truncate w-full">
-                            {guest.name} {guest.surname?.charAt(0)}.
+                      <div className="flex-1 w-full">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-bold text-lg">
+                            {request.space.title}
+                          </h4>
+                          <span className="font-extrabold text-lg text-accent">
+                            € {request.totalPrice.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-2 text-sm font-medium text-muted-foreground mb-4">
+                          <span className="flex items-center gap-2 capitalize">
+                            <CalendarIcon className="h-4 w-4" />{" "}
+                            {format(request.date, "EEEE dd MMM yyyy", {
+                              locale: it,
+                            })}{" "}
+                            • {request.startTime} - {request.endTime}
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <Users className="h-4 w-4" /> Richiesta prenotazione
                           </span>
                         </div>
 
-                        <div className="flex-1 w-full">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-bold text-lg">{space.title}</h4>
-                            <span className="font-extrabold text-lg text-accent">
-                              € {request.totalPrice.toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-2 text-sm font-medium text-muted-foreground mb-4">
-                            <span className="flex items-center gap-2 capitalize">
-                              <CalendarIcon className="h-4 w-4" />{" "}
-                              {format(request.date, "EEEE dd MMM yyyy", {
-                                locale: it,
-                              })}{" "}
-                              • {request.startTime} - {request.endTime}
-                            </span>
-                            <span className="flex items-center gap-2">
-                              <Users className="h-4 w-4" /> Richiesta
-                              prenotazione
-                            </span>
-                          </div>
-
-                          <div className="flex flex-wrap gap-3 mt-6">
-                            <Button className="rounded-xl font-bold gap-2 shadow-md shadow-accent/20 flex-1 sm:flex-none">
-                              <Check className="h-4 w-4" /> Accetta
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="rounded-xl font-bold gap-2 border-border/50 hover:bg-destructive/10 hover:text-destructive flex-1 sm:flex-none"
-                            >
-                              <X className="h-4 w-4" /> Rifiuta
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              className="rounded-xl font-bold text-muted-foreground"
-                            >
-                              Messaggio
-                            </Button>
-                          </div>
+                        <div className="flex flex-wrap gap-3 mt-6">
+                          <Button className="rounded-xl font-bold gap-2 shadow-md shadow-accent/20 flex-1 sm:flex-none">
+                            <Check className="h-4 w-4" /> Accetta
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="rounded-xl font-bold gap-2 border-border/50 hover:bg-destructive/10 hover:text-destructive flex-1 sm:flex-none"
+                          >
+                            <X className="h-4 w-4" /> Rifiuta
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="rounded-xl font-bold text-muted-foreground"
+                          >
+                            Messaggio
+                          </Button>
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               )}
             </section>
 
-            {/* Sezione Arrivi Confermati (Dinamica) */}
+            {/* Sezione Arrivi Confermati */}
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold tracking-tight">
@@ -330,53 +313,43 @@ export default function HostDashboardPage() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {upcomingArrivals.map((arrival) => {
-                    const space = hostSpaces.find(
-                      (s) => s.id === arrival.spaceId,
-                    );
-                    const guest = mockUsers.find(
-                      (u) => u.id === arrival.userId,
-                    );
-                    if (!space || !guest) return null;
-
-                    return (
-                      <div
-                        key={arrival.id}
-                        className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col sm:flex-row items-center gap-6"
-                      >
-                        <div className="bg-secondary/10 rounded-2xl w-16 h-16 flex flex-col items-center justify-center shrink-0">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
-                            {format(arrival.date, "MMM", { locale: it })}
-                          </span>
-                          <span className="text-xl font-black">
-                            {format(arrival.date, "dd")}
-                          </span>
-                        </div>
-                        <div className="flex-1 text-center sm:text-left">
-                          <h4 className="font-bold text-lg mb-1">
-                            {guest.name} {guest.surname}
-                          </h4>
-                          <p className="text-sm font-medium text-muted-foreground">
-                            {space.title} • {arrival.startTime} -{" "}
-                            {arrival.endTime}
-                          </p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          className="rounded-xl font-bold border-border/50 w-full sm:w-auto gap-2"
-                        >
-                          Dettagli{" "}
-                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                        </Button>
+                  {upcomingArrivals.map((arrival) => (
+                    <div
+                      key={arrival.id}
+                      className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col sm:flex-row items-center gap-6"
+                    >
+                      <div className="bg-secondary/10 rounded-2xl w-16 h-16 flex flex-col items-center justify-center shrink-0">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
+                          {format(arrival.date, "MMM", { locale: it })}
+                        </span>
+                        <span className="text-xl font-black">
+                          {format(arrival.date, "dd")}
+                        </span>
                       </div>
-                    );
-                  })}
+                      <div className="flex-1 text-center sm:text-left">
+                        <h4 className="font-bold text-lg mb-1">
+                          {arrival.guest?.name} {arrival.guest?.surname}
+                        </h4>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {arrival.space.title} • {arrival.startTime} -{" "}
+                          {arrival.endTime}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="rounded-xl font-bold border-border/50 w-full sm:w-auto gap-2"
+                      >
+                        Dettagli{" "}
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               )}
             </section>
           </div>
 
-          {/* COLONNA DESTRA: I tuoi Spazi (Dinamica) */}
+          {/* COLONNA DESTRA: I tuoi Spazi */}
           <div className="lg:col-span-4 space-y-6">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-2xl font-bold tracking-tight">
@@ -412,7 +385,10 @@ export default function HostDashboardPage() {
                   >
                     <div className="relative h-16 w-20 rounded-xl overflow-hidden shrink-0 border border-border/50 bg-muted">
                       <Image
-                        src={space.imageUrls[0]}
+                        src={
+                          space.imageUrls[0] ||
+                          "https://images.unsplash.com/photo-1497366216548-37526070297c"
+                        }
                         alt={space.title}
                         fill
                         unoptimized
@@ -430,9 +406,11 @@ export default function HostDashboardPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500" />
+                        <div
+                          className={`h-2 w-2 rounded-full ${space.isActive ? "bg-green-500" : "bg-yellow-500"}`}
+                        />
                         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                          Attivo
+                          {space.isActive ? "Attivo" : "In Bozza"}
                         </span>
                       </div>
                     </div>
