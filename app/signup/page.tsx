@@ -12,7 +12,19 @@ import {
 } from "@/components/ui/field";
 import { ArrowRight } from "lucide-react";
 
-export default function SignupPage() {
+// 1. Importiamo l'azione dal nostro file
+import { signup } from "@/actions/auth-actions";
+
+// Aggiungiamo type per la nuova convenzione di Next.js
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+export default async function SignupPage(props: {
+  searchParams: SearchParams;
+}) {
+  // 2. Risolviamo la Promise per accedere ai parametri
+  const searchParams = await props.searchParams;
+  const error = searchParams.error as string | undefined;
+
   return (
     <main className="flex min-h-[calc(100vh-80px)] w-full items-center justify-center p-6 bg-secondary/5">
       <div className="w-full max-w-lg bg-background p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-border/50">
@@ -36,24 +48,38 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <form>
+        {/* Alert per Errori (Es. Password troppo corta) */}
+        {error && (
+          <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-center text-sm font-bold text-destructive">
+            {error}
+          </div>
+        )}
+
+        {/* 2. Colleghiamo il form alla Server Action */}
+        <form action={signup}>
           <FieldSet>
             <FieldGroup>
               {/* Nome e Cognome */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="nome">Nome</FieldLabel>
+                  {/* Aggiunto name="nome" e required */}
                   <Input
                     id="nome"
+                    name="nome"
                     placeholder="Mario"
+                    required
                     className="h-12 rounded-xl"
                   />
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="cognome">Cognome</FieldLabel>
+                  {/* Aggiunto name="cognome" e required */}
                   <Input
                     id="cognome"
+                    name="cognome"
                     placeholder="Rossi"
+                    required
                     className="h-12 rounded-xl"
                   />
                 </Field>
@@ -62,10 +88,13 @@ export default function SignupPage() {
               {/* Email */}
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
+                {/* Aggiunto name="email" e required */}
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="mario.rossi@esempio.com"
+                  required
                   className="h-12 rounded-xl"
                 />
                 <FieldDescription>
@@ -79,10 +108,13 @@ export default function SignupPage() {
                 <FieldDescription>
                   Deve essere di almeno 8 caratteri.
                 </FieldDescription>
+                {/* Aggiunto name="password" e required */}
                 <Input
                   id="password"
+                  name="password"
                   type="password"
                   placeholder="••••••••"
+                  required
                   className="h-12 rounded-xl tracking-widest placeholder:tracking-normal"
                 />
               </Field>
@@ -113,7 +145,7 @@ export default function SignupPage() {
             <Button
               type="submit"
               size="lg"
-              className="w-full h-12 mt-2 rounded-xl font-bold shadow-lg shadow-primary/20 gap-2"
+              className="w-full h-12 mt-2 rounded-xl font-bold shadow-lg shadow-primary/20 gap-2 hover:scale-[1.02] transition-transform"
             >
               Inizia ora <ArrowRight className="h-4 w-4" />
             </Button>

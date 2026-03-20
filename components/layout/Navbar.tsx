@@ -31,8 +31,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function Navbar() {
+// Importiamo l'azione per fare il logout reale
+import { logout } from "@/actions/auth-actions";
+
+// Definiamo che la Navbar accetta un "user" (può essere null se non si è loggati)
+export default function Navbar({ user }: { user: any | null }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Calcoliamo le iniziali in modo dinamico
+  const getInitials = () => {
+    if (!user) return "U";
+    const n = user.name ? user.name[0] : "";
+    const s = user.surname ? user.surname[0] : "";
+    return (n + s).toUpperCase() || "U";
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
@@ -69,45 +81,57 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-4 border-l pl-6 ml-2 border-border/60">
-            <Button asChild variant="ghost" size="sm" className="font-bold">
-              <Link href="/login">Accedi</Link>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Avatar className="h-9 w-9 border cursor-pointer hover:ring-2 hover:ring-accent/20 transition-all outline-none">
-                  <AvatarImage
-                    src="https://avatars.githubusercontent.com/u/75944229?v=4"
-                    alt="User"
-                  />
-                  <AvatarFallback className="bg-accent/10 text-accent font-bold">
-                    AL
-                  </AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-56 mt-2 shadow-2xl bg-background border border-border/50 opacity-100 z-[100]"
-              >
-                <DropdownMenuLabel className="font-bold text-muted-foreground text-[10px] uppercase tracking-widest px-3 py-2">
-                  Il mio Account
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="cursor-pointer py-2.5">
-                  <Link href="/profile">
-                    <User className="mr-2 h-4 w-4" /> Profilo
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="cursor-pointer py-2.5">
-                  <Link href="/profile/settings">
-                    <Settings className="mr-2 h-4 w-4" /> Impostazioni
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer font-bold py-2.5">
-                  <LogOut className="mr-2 h-4 w-4" /> Esci
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* LOGICA DESKTOP: Loggato vs Anonimo */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Avatar className="h-9 w-9 border cursor-pointer hover:ring-2 hover:ring-accent/20 transition-all outline-none">
+                    <AvatarImage
+                      src={user.image || ""}
+                      alt={user.name || "User"}
+                    />
+                    <AvatarFallback className="bg-accent/10 text-accent font-bold">
+                      {getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 mt-2 shadow-2xl bg-background border border-border/50 opacity-100 z-[100]"
+                >
+                  <DropdownMenuLabel className="font-bold text-muted-foreground text-[10px] uppercase tracking-widest px-3 py-2">
+                    Il mio Account
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer py-2.5">
+                    <Link href="/profile">
+                      <User className="mr-2 h-4 w-4" /> Profilo
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer py-2.5">
+                    <Link href="/profile/settings">
+                      <Settings className="mr-2 h-4 w-4" /> Impostazioni
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {/* Il tasto esci avvolto nel form per la Server Action */}
+                  <DropdownMenuItem asChild>
+                    <form action={logout}>
+                      <button
+                        type="submit"
+                        className="w-full flex items-center text-destructive font-bold cursor-pointer py-1"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" /> Esci
+                      </button>
+                    </form>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button asChild variant="ghost" size="sm" className="font-bold">
+                <Link href="/login">Accedi</Link>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -157,66 +181,79 @@ export default function Navbar() {
                 >
                   <Mail className="h-5 w-5 opacity-70" /> Contatti
                 </Link>
-                <div className="h-px bg-border/50 my-2" />
-                <Link
-                  href="/login"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-4 py-3 text-md font-bold px-2 rounded-xl hover:bg-accent/10 hover:text-accent transition-colors"
-                >
-                  <LogIn className="h-5 w-5 opacity-70" /> Accedi
-                </Link>
+
+                {/* Se non loggato, mostra Accedi nel menu */}
+                {!user && (
+                  <>
+                    <div className="h-px bg-border/50 my-2" />
+                    <Link
+                      href="/login"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-4 py-3 text-md font-bold px-2 rounded-xl hover:bg-accent/10 hover:text-accent transition-colors"
+                    >
+                      <LogIn className="h-5 w-5 opacity-70" /> Accedi
+                    </Link>
+                  </>
+                )}
               </div>
 
-              {/* Sezione Account Mobile */}
-              <div className="border-t pt-8 pb-6">
-                <div className="flex items-center gap-3 mb-8 px-2">
-                  <Avatar className="h-10 w-10 border shadow-sm">
-                    <AvatarImage src="https://avatars.githubusercontent.com/u/75944229?v=4" />
-                    <AvatarFallback>AL</AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col leading-tight">
-                    <span className="text-sm font-bold">Andrea Lai</span>
-                    <span className="text-[10px] text-accent font-bold uppercase tracking-widest">
-                      Membro Pro
-                    </span>
+              {/* LOGICA MOBILE: Sezione Account se Loggato */}
+              {user && (
+                <div className="border-t pt-8 pb-6">
+                  <div className="flex items-center gap-3 mb-8 px-2">
+                    <Avatar className="h-10 w-10 border shadow-sm">
+                      <AvatarImage src={user.image || ""} />
+                      <AvatarFallback>{getInitials()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col leading-tight">
+                      <span className="text-sm font-bold truncate w-32">
+                        {user.name} {user.surname}
+                      </span>
+                      <span className="text-[10px] text-accent font-bold uppercase tracking-widest">
+                        {user.role}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="lg"
+                      className="w-full justify-start gap-4 rounded-xl font-bold"
+                    >
+                      <Link href="/profile" onClick={() => setIsOpen(false)}>
+                        <User className="h-5 w-5 opacity-70" /> Profilo
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="lg"
+                      className="w-full justify-start gap-4 rounded-xl font-bold"
+                    >
+                      <Link
+                        href="/profile/settings"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Settings className="h-5 w-5 opacity-70" /> Impostazioni
+                      </Link>
+                    </Button>
+
+                    {/* Tasto Esci Mobile */}
+                    <form action={logout}>
+                      <Button
+                        type="submit"
+                        variant="destructive"
+                        size="lg"
+                        className="w-full justify-start gap-4 rounded-xl font-bold mt-2"
+                      >
+                        <LogOut className="h-5 w-5" /> Esci
+                      </Button>
+                    </form>
                   </div>
                 </div>
-
-                <div className="grid gap-3">
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="lg"
-                    className="w-full justify-start gap-4 rounded-xl font-bold"
-                  >
-                    <Link href="/profile" onClick={() => setIsOpen(false)}>
-                      <User className="h-5 w-5 opacity-70" /> Profilo
-                    </Link>
-                  </Button>
-
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="lg"
-                    className="w-full justify-start gap-4 rounded-xl font-bold"
-                  >
-                    <Link
-                      href="/profile/settings"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <Settings className="h-5 w-5 opacity-70" /> Impostazioni
-                    </Link>
-                  </Button>
-
-                  <Button
-                    variant="destructive"
-                    size="lg"
-                    className="w-full justify-start gap-4 rounded-xl font-bold mt-2"
-                  >
-                    <LogOut className="h-5 w-5" /> Esci
-                  </Button>
-                </div>
-              </div>
+              )}
             </SheetContent>
           </Sheet>
         </div>

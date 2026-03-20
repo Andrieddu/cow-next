@@ -2,17 +2,21 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldSet,
-  FieldLegend,
-  FieldSeparator,
-} from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { ArrowRight } from "lucide-react";
 
-export default function LoginPage() {
+// 1. Importiamo l'azione di login
+import { login } from "@/actions/auth-actions";
+
+// 2. Tipo per i searchParams asincroni di Next 15
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+export default async function LoginPage(props: { searchParams: SearchParams }) {
+  // 3. Risolviamo i parametri in modo asincrono
+  const searchParams = await props.searchParams;
+  const error = searchParams.error as string | undefined;
+  const message = searchParams.message as string | undefined;
+
   return (
     <main className="flex min-h-[calc(100vh-80px)] w-full items-center justify-center p-6 bg-secondary/5">
       <div className="w-full max-w-md bg-background p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-border/50">
@@ -35,15 +39,33 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form>
+        {/* 4. Alert per Errori (es. Credenziali Errate) */}
+        {error && (
+          <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-center text-sm font-bold text-destructive">
+            {error}
+          </div>
+        )}
+
+        {/* 5. Alert per Messaggi di Successo (es. Conferma inviata) */}
+        {message && (
+          <div className="mb-6 rounded-xl border border-primary/20 bg-primary/10 p-4 text-center text-sm font-bold text-primary">
+            {message}
+          </div>
+        )}
+
+        {/* 6. Colleghiamo il form all'azione */}
+        <form action={login}>
           <FieldSet>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
+                {/* Aggiunti name e required */}
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="mario.rossi@esempio.com"
+                  required
                   className="h-12 rounded-xl"
                 />
               </Field>
@@ -58,10 +80,13 @@ export default function LoginPage() {
                     Dimenticata?
                   </Link>
                 </div>
+                {/* Aggiunti name e required */}
                 <Input
                   id="password"
+                  name="password"
                   type="password"
                   placeholder="••••••••"
+                  required
                   className="h-12 rounded-xl"
                 />
               </Field>
@@ -69,7 +94,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 size="lg"
-                className="w-full h-12 rounded-xl font-bold mt-2 shadow-lg shadow-primary/20 gap-2"
+                className="w-full h-12 rounded-xl font-bold mt-2 shadow-lg shadow-primary/20 gap-2 hover:scale-[1.02] transition-transform"
               >
                 Accedi <ArrowRight className="h-4 w-4" />
               </Button>

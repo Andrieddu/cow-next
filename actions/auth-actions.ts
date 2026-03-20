@@ -1,0 +1,71 @@
+"use server";
+
+import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+export async function login(formData: FormData) {
+  // Inizializza il client Supabase per il server (legge/scrive i cookie)
+  const supabase = await createClient();
+
+  // Estrae i dati dal form React
+  const data = {
+    email: formData.get("email") as string,
+    password: formData.get("password") as string,
+  };
+
+  // Tenta il login tramite Supabase Auth
+  const { error } = await supabase.auth.signInWithPassword(data);
+
+  if (error) {
+    // Se fallisce, rimanda alla pagina di login passando l'errore nell'URL
+    return redirect("/login?error=Credenziali non valide");
+  }
+
+  // Se ha successo, aggiorna la cache e porta l'utente al suo profilo
+  revalidatePath("/", "layout");
+  redirect("/profile");
+}
+
+export async function signup(formData: FormData) {
+  const supabase = await createClient();
+
+  // Estraiamo TUTTI i campi dal form, inclusi nome e cognome
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+  const nome = formData.get("nome") as string;
+  const cognome = formData.get("cognome") as string;
+
+  // Registra l'utente in Supabase i metadati (options.data)
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        nome,
+        cognome,
+      },
+    },
+  });
+
+  if (error) {
+    // Se c'è un errore, torna alla pagina di signup per mostrare l'errore
+    return redirect(`/signup?error=${error.message}`);
+  }
+
+  // Se la registrazione va a buon fine, reindirizza al login con un messaggio di successo
+  revalidatePath("/", "layout");
+  return redirect(
+    "/login?message=Controlla la tua email per confermare l'account",
+  );
+}
+
+export async function logout() {
+  const supabase = await createClient();
+
+  // Distrugge la sessione (elimina i cookie)
+  await supabase.auth.signOut();
+
+  revalidatePath("/", "layout");
+  redirect("/login");
+}

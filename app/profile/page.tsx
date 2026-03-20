@@ -29,7 +29,11 @@ import {
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
-// 1. IMPORTIAMO IL SERVICE E I TIPI DI PRISMA AL POSTO DEL MOCK DATA
+// 1. IMPORTIAMO SUPABASE E IL REDIRECT
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
+import { logout } from "@/actions/auth-actions"; // Importiamo l'azione di logout
+
 import { UserService } from "@/services/user-service";
 import { SpaceType, BookingStatus } from "@/generated/prisma/client";
 
@@ -74,20 +78,37 @@ const getStatusColor = (status: BookingStatus) => {
   }
 };
 
-// 2. COMPONENTE SERVER (async, niente "use client")
 export default async function ProfilePage() {
-  // 3. RECUPERO DATI DAL DB (Usiamo Luigi Verdi dal seed)
-  const currentUser = await UserService.getProfileWithBookings("seed-guest-1");
+  // 2. RECUPERO UTENTE LOGGATO
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
+  // 3. PROTEZIONE ROTTA: Se non sei loggato, vai al login
+  if (error || !user) {
+    redirect("/login");
+  }
+
+  // 4. RECUPERO DATI DAL DB TRAMITE L'ID DI SUPABASE
+  const currentUser = await UserService.getProfileWithBookings(user.id);
+
+  // Fallback in caso di latenza del trigger o disallineamento
   if (!currentUser) {
     return (
-      <div className="p-20 text-center font-bold">
-        Utente non trovato. Fai il login.
+      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] bg-secondary/5">
+        <div className="bg-background p-8 rounded-3xl shadow-sm text-center border border-border/50">
+          <h2 className="text-xl font-bold mb-2">Profilo in elaborazione</h2>
+          <p className="text-muted-foreground">
+            Stiamo sincronizzando i tuoi dati. Ricarica la pagina tra pochi
+            secondi.
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Estraiamo le prenotazioni per mantenere la stessa variabile che usavi tu
   const userBookings = currentUser.bookings || [];
 
   return (
@@ -103,7 +124,7 @@ export default async function ProfilePage() {
             <div className="h-32 w-32 rounded-full border-4 border-background shadow-xl overflow-hidden bg-secondary/20 flex items-center justify-center">
               <Image
                 src={currentUser.image || "https://github.com/shadcn.png"}
-                alt={`${currentUser.name} ${currentUser.surname}`}
+                alt={`${currentUser.name || "Utente"} ${currentUser.surname || ""}`}
                 width={128}
                 height={128}
                 className="object-cover"
@@ -150,13 +171,17 @@ export default async function ProfilePage() {
                 <Settings className="h-5 w-5 text-accent" /> Impostazioni
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full h-12 rounded-xl font-bold border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all flex items-center justify-center gap-2"
-            >
-              <LogOut className="h-5 w-5" /> Esci
-            </Button>
+            {/* AGGIUNTO IL FORM PER IL LOGOUT REALE */}
+            <form action={logout} className="w-full">
+              <Button
+                type="submit"
+                variant="outline"
+                size="lg"
+                className="w-full h-12 rounded-xl font-bold border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all flex items-center justify-center gap-2"
+              >
+                <LogOut className="h-5 w-5" /> Esci
+              </Button>
+            </form>
           </div>
         </div>
 
@@ -175,8 +200,9 @@ export default async function ProfilePage() {
                   <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
                     Email
                   </span>
-                  <span className="font-medium flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-accent" /> {currentUser.email}
+                  <span className="font-medium flex items-center gap-2 truncate">
+                    <Mail className="h-4 w-4 text-accent shrink-0" />{" "}
+                    {currentUser.email}
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">
@@ -184,7 +210,7 @@ export default async function ProfilePage() {
                     Telefono
                   </span>
                   <span className="font-medium flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-accent" />{" "}
+                    <Phone className="h-4 w-4 text-accent shrink-0" />{" "}
                     {currentUser.phone || "Non inserito"}
                   </span>
                 </div>
@@ -240,7 +266,7 @@ export default async function ProfilePage() {
                   pochi click.
                 </p>
                 <Link href="/search">
-                  <Button className="rounded-xl font-bold shadow-sm h-11 px-8">
+                  <Button className="rounded-xl font-bold shadow-sm h-11 px-8 hover:scale-[1.02] transition-transform">
                     Cerca uno spazio
                   </Button>
                 </Link>
@@ -248,12 +274,9 @@ export default async function ProfilePage() {
             ) : (
               userBookings.map((booking) => {
                 const space = booking.space;
-                // Se lo spazio è stato cancellato dal db
                 if (!space) return null;
 
-                // 4. L'host ora arriva dal DB tramite l'include di Prisma!
                 const host = space.host;
-
                 const monthShort = format(booking.date, "MMM", { locale: it });
                 const day = format(booking.date, "dd");
                 const fullDateStr = format(booking.date, "EEEE dd MMMM yyyy", {
@@ -262,10 +285,7 @@ export default async function ProfilePage() {
 
                 return (
                   <Sheet key={booking.id}>
-                    {/* CARD ESTERNA NELLA LISTA */}
                     <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 hover:shadow-md transition-shadow flex flex-col sm:flex-row items-start sm:items-center gap-6 relative overflow-hidden">
-                      {/* LA STRISCIA AMBER È STATA RIMOSSA DA QUI */}
-
                       <div className="bg-accent/10 rounded-2xl w-20 h-20 flex flex-col items-center justify-center shrink-0 border border-accent/20">
                         <span className="text-sm font-bold text-accent uppercase tracking-widest">
                           {monthShort}
@@ -275,7 +295,7 @@ export default async function ProfilePage() {
                         </span>
                       </div>
 
-                      <div className="flex-1">
+                      <div className="flex-1 overflow-hidden">
                         <div className="flex items-center gap-2 mb-2">
                           <div
                             className={cn(
@@ -285,7 +305,7 @@ export default async function ProfilePage() {
                           >
                             {formatStatus(booking.status)}
                           </div>
-                          <div className="inline-flex items-center rounded-full border border-border/50 bg-secondary/5 px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          <div className="inline-flex items-center rounded-full border border-border/50 bg-secondary/5 px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
                             {formatSpaceType(space.type)}
                           </div>
                         </div>
@@ -315,7 +335,6 @@ export default async function ProfilePage() {
                       </SheetTrigger>
                     </div>
 
-                    {/* PANNELLO LATERALE (SHEET) */}
                     <SheetContent className="w-full sm:max-w-md bg-background border-l border-border/50 overflow-y-auto z-[100] p-0 flex flex-col">
                       <SheetHeader className="text-left pt-8 px-6 sm:px-8 mb-6">
                         <div
@@ -469,7 +488,7 @@ export default async function ProfilePage() {
                   pochi click.
                 </p>
                 <Link href="/search">
-                  <Button className="rounded-xl font-bold shadow-sm h-11 px-8">
+                  <Button className="rounded-xl font-bold shadow-sm h-11 px-8 hover:scale-[1.02] transition-transform">
                     Cerca uno spazio
                   </Button>
                 </Link>
