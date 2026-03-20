@@ -21,6 +21,35 @@ export const SpaceService = {
   },
 
   /**
+   * Recupera tutti gli spazi attivi per la pagina di ricerca
+   */
+  searchActiveSpaces: async (query?: string) => {
+    try {
+      // Se c'è una query testuale, cerchiamo nella città, indirizzo o titolo
+      const whereClause = query
+        ? {
+            isActive: true,
+            OR: [
+              { city: { contains: query, mode: "insensitive" } },
+              { address: { contains: query, mode: "insensitive" } },
+              { title: { contains: query, mode: "insensitive" } },
+            ],
+          }
+        : { isActive: true };
+
+      return await prisma.space.findMany({
+        where: whereClause as any,
+        include: {
+          reviews: true,
+        },
+      });
+    } catch (error) {
+      console.error("[DB Error] Errore ricerca spazi:", error);
+      return [];
+    }
+  },
+
+  /**
    * Crea un nuovo annuncio (Space) nel database
    */
   createSpace: async (data: {
