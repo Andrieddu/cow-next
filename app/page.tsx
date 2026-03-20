@@ -80,9 +80,18 @@ export default function Home() {
   // --- LOGICA DI RICERCA ---
   const handleSearch = () => {
     const params = new URLSearchParams();
+
     if (location) params.set("q", location);
-    if (date?.from) params.set("from", date.from.toISOString());
-    if (date?.to) params.set("to", date.to.toISOString());
+
+    // Invece di toISOString(), usiamo format di date-fns
+    // per mandare "2026-03-21" indipendentemente dal fuso orario
+    if (date?.from) {
+      params.set("startDate", format(date.from, "yyyy-MM-dd"));
+    }
+    if (date?.to) {
+      params.set("endDate", format(date.to, "yyyy-MM-dd"));
+    }
+
     params.set("start", startTime);
     params.set("end", endTime);
 
@@ -99,7 +108,7 @@ export default function Home() {
         </h1>
 
         <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-[650px] mx-auto font-medium leading-relaxed">
-          Scrivanie, uffici privati e sale meeting pronti all'uso. Prenota in
+          Scrivanie, uffici privati e sale meeting pronti all uso. Prenota in
           pochi secondi e inizia a produrre.
         </p>
 

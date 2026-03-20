@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Star,
@@ -74,7 +74,7 @@ import {
 } from "@/components/ui/drawer";
 
 import { cn } from "@/lib/utils";
-import { format, addDays } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { it } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
 
@@ -135,14 +135,29 @@ export default function SpaceDetailClient({
   host: any;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 0),
+  // --- LOGICA DI LETTURA PARAMETRI URL ---
+  const urlStartDate = searchParams.get("startDate");
+  const urlEndDate = searchParams.get("endDate");
+  const urlStartHour = searchParams.get("start");
+  const urlEndHour = searchParams.get("end");
+
+  // Inizializzazione Date
+  const [date, setDate] = useState<DateRange | undefined>(() => {
+    const from = urlStartDate ? parseISO(urlStartDate) : new Date();
+    const to = urlEndDate ? parseISO(urlEndDate) : from;
+
+    return {
+      from: isValid(from) ? from : new Date(),
+      to: isValid(to) ? to : isValid(from) ? from : new Date(),
+    };
   });
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("13:00");
+  // Inizializzazione Orari
+  const [startTime, setStartTime] = useState(urlStartHour || "09:00");
+  const [endTime, setEndTime] = useState(urlEndHour || "13:00");
+
   const [guests, setGuests] = useState(1);
   const [isFullDay, setIsFullDay] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -156,7 +171,7 @@ export default function SpaceDetailClient({
       try {
         await navigator.share({ title: space?.title, url });
       } catch (err) {
-        console.log("Condivisione annullata");
+        console.log("Condivisione annullata", err);
       }
     } else {
       await navigator.clipboard.writeText(url);

@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MapPin, Star, Search, SlidersHorizontal, Clock } from "lucide-react";
+import { format, isValid, parseISO } from "date-fns";
+import { it } from "date-fns/locale";
 
 // Helper per tradurre l'enum Prisma in italiano
 const formatSpaceType = (type: string) => {
@@ -53,8 +55,20 @@ export default function SearchClient({
   const searchParams = useSearchParams();
   const queryLocation = searchParams.get("q")?.toLowerCase() || "";
 
+  const startDateStr = searchParams.get("startDate");
+  const endDateStr = searchParams.get("endDate");
   const startTime = searchParams.get("start") || "09:00";
   const endTime = searchParams.get("end") || "10:00";
+
+  // Helper per mostrare la data in modo carino nel box di ricerca
+  const formatDateDisplay = (dateStr: string | null) => {
+    if (!dateStr) return "Oggi";
+    const date = parseISO(dateStr);
+    return isValid(date) ? format(date, "dd MMM", { locale: it }) : "Oggi";
+  };
+
+  // Prepariamo i parametri da passare alla pagina di dettaglio
+  const detailQueryString = searchParams.toString();
 
   const duration = useMemo(() => {
     const start = parseInt(startTime.split(":")[0]);
@@ -149,13 +163,12 @@ export default function SearchClient({
             href="/"
             className="flex flex-1 items-center justify-between gap-3 bg-background border border-border/60 shadow-sm rounded-full pl-5 pr-2 py-2"
           >
-            <div className="flex items-center gap-2 overflow-hidden">
+            <div className="flex flex-col overflow-hidden leading-tight">
               <span className="text-sm font-bold text-foreground truncate capitalize">
                 {queryLocation || "Ovunque"}
               </span>
-              <span className="w-1 h-1 rounded-full bg-muted-foreground/40 shrink-0" />
-              <span className="text-sm font-medium text-muted-foreground shrink-0">
-                {duration}h
+              <span className="text-[10px] font-medium text-muted-foreground">
+                {formatDateDisplay(startDateStr)} • {startTime}-{endTime}
               </span>
             </div>
             <div className="bg-primary rounded-full p-2 shrink-0 ml-2">
@@ -164,7 +177,7 @@ export default function SearchClient({
           </Link>
           <Button
             variant="outline"
-            className="rounded-xl h-12 px-4 font-bold border-border/50"
+            className="rounded-xl h-12 px-4 border-border/50"
           >
             <SlidersHorizontal className="h-4 w-4" />
           </Button>
@@ -186,6 +199,12 @@ export default function SearchClient({
                 <div className="flex flex-col">
                   <span className="text-xl font-bold text-foreground capitalize">
                     {queryLocation || "Ovunque"}
+                  </span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {formatDateDisplay(startDateStr)}
+                    {endDateStr &&
+                      endDateStr !== startDateStr &&
+                      ` - ${formatDateDisplay(endDateStr)}`}
                   </span>
                   <span className="text-sm font-medium text-muted-foreground">
                     {startTime} - {endTime} ({duration}h)
@@ -344,7 +363,7 @@ export default function SearchClient({
 
                   return (
                     <Link
-                      href={`/space/${space.id}`}
+                      href={`/space/${space.id}?${detailQueryString}`}
                       key={space.id}
                       className="group"
                     >
