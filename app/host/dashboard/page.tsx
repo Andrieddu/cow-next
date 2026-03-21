@@ -11,7 +11,6 @@ import {
   Star,
   Plus,
   ArrowRight,
-  MoreHorizontal,
   MapPin,
   Users,
 } from "lucide-react";
@@ -21,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import HostBookingActions from "@/components/host/HostBookingActions";
 import HostBookingCard from "@/components/host/HostBookingCard";
+import HostSpaceDropdown from "@/components/host/HostSpaceDropdown";
 
 // IMPORT DATABASE E AUTH REALI
 import { createClient } from "@/utils/supabase/server";
@@ -366,13 +366,7 @@ export default async function HostDashboardPage() {
                         </span>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground shrink-0"
-                    >
-                      <MoreHorizontal className="h-5 w-5" />
-                    </Button>
+                    <HostSpaceDropdown spaceId={space.id} />
                   </div>
                 ))
               )}

@@ -175,3 +175,39 @@ export async function updateSpaceAction(prevState: any, formData: FormData) {
     return { success: false, error: "Errore durante l'aggiornamento." };
   }
 }
+
+export async function deleteSpaceAction(spaceId: string) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: "Non autorizzato." };
+    }
+
+    // Per sicurezza, verifichiamo che lo spazio appartenga all'utente loggato
+    const space = await prisma.space.findUnique({
+      where: { id: spaceId },
+      select: { hostId: true },
+    });
+
+    if (!space || space.hostId !== user.id) {
+      return { success: false, error: "Spazio non trovato o non autorizzato." };
+    }
+
+    // Eliminiamo lo spazio (Prisma eliminerà a cascata anche le prenotazioni e recensioni collegate grazie a onDelete: Cascade)
+    await prisma.space.delete({
+      where: { id: spaceId },
+    });
+
+    revalidatePath("/host/dashboard");
+    revalidatePath("/host/listing");
+
+    return { success: true };
+  } catch (error) {
+    console.error("[Delete Space Error]:", error);
+    return { success: false, error: "Impossibile eliminare lo spazio." };
+  }
+}
