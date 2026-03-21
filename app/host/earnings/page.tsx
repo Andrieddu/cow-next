@@ -1,14 +1,12 @@
-"use client";
-
 import React from "react";
 import Link from "next/link";
-import { format } from "date-fns";
+import { redirect } from "next/navigation";
+import { format, subMonths } from "date-fns";
 import { it } from "date-fns/locale";
 import {
   ArrowLeft,
   TrendingUp,
   Download,
-  Calendar as CalendarIcon,
   CheckCircle2,
   Clock,
   ArrowUpRight,
@@ -16,47 +14,52 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-// IMPORT DATI MOCK
-import {
-  mockUsers,
-  getSpacesWithAggregates,
-  mockBookings,
-} from "@/lib/mock-data";
+// IMPORT DATABASE E AUTH REALI
+import { createClient } from "@/utils/supabase/server";
+import { HostService } from "@/services/host-service";
+import { UserService } from "@/services/user-service";
 
-// DATI STATICI PER IL GRAFICO VISIVO (Visto che abbiamo solo 2 prenotazioni nel mock)
-const chartData = [
-  { month: "Ott", amount: 450 },
-  { month: "Nov", amount: 820 },
-  { month: "Dic", amount: 600 },
-  { month: "Gen", amount: 950 },
-  { month: "Feb", amount: 1100 },
-  { month: "Mar", amount: 1240, active: true }, // Mese corrente
-];
-const maxAmount = Math.max(...chartData.map((d) => d.amount));
+export default async function HostEarningsPage() {
+  // 1. AUTENTICAZIONE
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default function HostEarningsPage() {
-  // 1. Recupero Dati (Senza useMemo per far felice il React Compiler)
-  const currentHost = mockUsers.find((u) => u.id === "usr_host1");
-  const hostSpaces = getSpacesWithAggregates().filter(
-    (s) => s.hostId === "usr_host1",
-  );
-  const spaceIds = hostSpaces.map((s) => s.id);
+  if (!user) {
+    redirect("/login");
+  }
 
-  // Tutte le prenotazioni per gli spazi di questo host
-  const hostBookings = mockBookings
-    .filter((b) => spaceIds.includes(b.spaceId))
-    .sort((a, b) => b.date.getTime() - a.date.getTime()); // Dalla più recente
+  const currentUser = await UserService.getUserById(user.id);
+  if (currentUser?.role !== "HOST" && currentUser?.role !== "ADMIN") {
+    redirect("/profile");
+  }
 
-  // 2. Calcoli Logici
-  // Saldo Disponibile (Prenotazioni completate o passate)
+  // 2. RECUPERO DATI REALI DAL DATABASE
+  const hostSpaces = await HostService.getDashboardData(user.id);
+
+  // Appiattiamo tutte le prenotazioni collegando i dati dello spazio
+  const hostBookings = hostSpaces
+    .flatMap((space) =>
+      space.bookings.map((booking) => ({
+        ...booking,
+        space,
+        guest: booking.user,
+      })),
+    )
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Dalla più recente
+
+  // 3. CALCOLI SALDI
+  const now = new Date();
+
+  // Saldo Disponibile (Prenotazioni completate o passate e confermate)
   const availableBalance = hostBookings
     .filter(
       (b) =>
         b.status === "COMPLETED" ||
-        (b.status === "CONFIRMED" && b.date < new Date()),
+        (b.status === "CONFIRMED" && new Date(b.date) < now),
     )
     .reduce((sum, b) => sum + b.totalPrice, 0);
 
@@ -64,12 +67,36 @@ export default function HostEarningsPage() {
   const pendingBalance = hostBookings
     .filter(
       (b) =>
-        (b.status === "CONFIRMED" && b.date >= new Date()) ||
+        (b.status === "CONFIRMED" && new Date(b.date) >= now) ||
         b.status === "PENDING",
     )
     .reduce((sum, b) => sum + b.totalPrice, 0);
 
-  if (!currentHost) return null;
+  // 4. GENERAZIONE DINAMICA DEL GRAFICO (Ultimi 6 mesi)
+  const chartData = [];
+  for (let i = 5; i >= 0; i--) {
+    const targetDate = subMonths(now, i);
+    const monthYearStr = format(targetDate, "yyyy-MM");
+    const monthLabel = format(targetDate, "MMM", { locale: it });
+
+    // Somma degli incassi validi per quel mese
+    const monthTotal = hostBookings
+      .filter(
+        (b) =>
+          b.status !== "CANCELLED" &&
+          format(new Date(b.date), "yyyy-MM") === monthYearStr,
+      )
+      .reduce((sum, b) => sum + b.totalPrice, 0);
+
+    chartData.push({
+      month: monthLabel, // es. "Ott", "Nov"
+      amount: monthTotal,
+      active: i === 0, // Evidenzia il mese corrente
+    });
+  }
+
+  // Evitiamo divisioni per zero se l'host non ha ancora guadagni
+  const maxAmount = Math.max(...chartData.map((d) => d.amount), 1);
 
   return (
     <main className="flex flex-col w-full min-h-screen bg-secondary/5 pb-20">
@@ -106,9 +133,9 @@ export default function HostEarningsPage() {
             {/* CARDS RIASSUNTIVE */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Saldo Disponibile */}
-              <div className="bg-background rounded-[2rem] p-8 shadow-sm border border-border/50 flex flex-col gap-4 relative overflow-hidden">
+              <div className="bg-background rounded-[2rem] p-8 shadow-sm border border-border/50 flex flex-col gap-4 relative overflow-hidden group hover:border-primary/30 transition-colors">
                 <div className="flex items-center gap-3 relative z-10">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                     <CheckCircle2 className="h-5 w-5 text-primary" />
                   </div>
                   <span className="font-bold text-muted-foreground uppercase tracking-widest text-xs">
@@ -126,9 +153,9 @@ export default function HostEarningsPage() {
               </div>
 
               {/* In Arrivo */}
-              <div className="bg-background rounded-[2rem] p-8 shadow-sm border border-border/50 flex flex-col gap-4 relative overflow-hidden">
+              <div className="bg-background rounded-[2rem] p-8 shadow-sm border border-border/50 flex flex-col gap-4 relative overflow-hidden group hover:border-amber-500/30 transition-colors">
                 <div className="flex items-center gap-3 relative z-10">
-                  <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
                     <Clock className="h-5 w-5 text-amber-600" />
                   </div>
                   <span className="font-bold text-muted-foreground uppercase tracking-widest text-xs">
@@ -139,21 +166,22 @@ export default function HostEarningsPage() {
                   <h2 className="text-4xl font-black text-foreground">
                     € {pendingBalance.toFixed(2)}
                   </h2>
-                  <p className="text-sm font-medium text-muted-foreground mt-4">
-                    Basato sulle prenotazioni future già confermate e in attesa.
+                  <p className="text-sm font-medium text-muted-foreground mt-4 leading-relaxed">
+                    Basato sulle prenotazioni future confermate o in attesa di
+                    approvazione.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* GRAFICO ANDAMENTO MENSILE (CSS Puro) */}
+            {/* GRAFICO ANDAMENTO MENSILE */}
             <div className="bg-background rounded-[2rem] p-8 shadow-sm border border-border/50">
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <h3 className="text-xl font-bold tracking-tight">
                     Andamento Mensile
                   </h3>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-sm font-medium text-muted-foreground mt-1">
                     Entrate lorde degli ultimi 6 mesi
                   </p>
                 </div>
@@ -175,8 +203,8 @@ export default function HostEarningsPage() {
                       className="flex flex-col items-center gap-3 flex-1 group z-10"
                     >
                       {/* Tooltip Hover Fittizio */}
-                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold text-foreground">
-                        €{data.amount}
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold text-foreground bg-secondary/80 px-2 py-1 rounded-md backdrop-blur-md">
+                        €{data.amount.toFixed(0)}
                       </span>
                       {/* Barra */}
                       <div className="w-full max-w-[3rem] bg-secondary/20 rounded-t-xl relative overflow-hidden h-full flex items-end">
@@ -193,7 +221,7 @@ export default function HostEarningsPage() {
                       {/* Label Mese */}
                       <span
                         className={cn(
-                          "text-xs font-bold uppercase tracking-widest",
+                          "text-xs font-bold uppercase tracking-widest capitalize",
                           data.active ? "text-accent" : "text-muted-foreground",
                         )}
                       >
@@ -222,16 +250,12 @@ export default function HostEarningsPage() {
                   </p>
                 </div>
               ) : (
-                hostBookings.map((booking) => {
-                  const space = hostSpaces.find(
-                    (s) => s.id === booking.spaceId,
-                  );
-                  if (!space) return null;
-
+                hostBookings.slice(0, 8).map((booking) => {
+                  // Mostriamo solo le ultime 8 per non allungare troppo
                   const isPending =
                     booking.status === "PENDING" ||
                     (booking.status === "CONFIRMED" &&
-                      booking.date >= new Date());
+                      new Date(booking.date) >= now);
                   const isCancelled = booking.status === "CANCELLED";
 
                   return (
@@ -260,10 +284,10 @@ export default function HostEarningsPage() {
                         </div>
                         <div className="flex flex-col overflow-hidden">
                           <span className="font-bold text-sm text-foreground truncate">
-                            {space.title}
+                            {booking.space.title}
                           </span>
                           <span className="text-xs font-medium text-muted-foreground truncate">
-                            {format(booking.date, "dd MMM yyyy", {
+                            {format(new Date(booking.date), "dd MMM yyyy", {
                               locale: it,
                             })}
                           </span>
@@ -312,14 +336,15 @@ export default function HostEarningsPage() {
               </div>
               <p className="text-xs font-medium text-muted-foreground leading-relaxed mb-4">
                 I fondi vengono trasferiti automaticamente sul tuo conto
-                bancario entro 3-5 giorni lavorativi dal check-in dell'ospite.
+                bancario entro 3-5 giorni lavorativi dal check-in dell ospite
+                tramite Stripe Connect.
               </p>
-              <div className="bg-background border border-border/50 p-3 rounded-xl flex justify-between items-center">
-                <span className="text-xs font-bold">
-                  IT83 T020 0000 0001 2345
+              <div className="bg-background border border-border/50 p-3 rounded-xl flex justify-between items-center cursor-pointer hover:border-accent/30 transition-colors">
+                <span className="text-xs font-bold text-muted-foreground">
+                  Da configurare in Impostazioni
                 </span>
                 <span className="text-[10px] font-bold text-accent uppercase tracking-widest">
-                  Principale
+                  Vai
                 </span>
               </div>
             </div>

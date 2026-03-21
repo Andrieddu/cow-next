@@ -150,6 +150,7 @@ export default function CheckoutClient({ space }: { space: any }) {
       }
     } catch (error) {
       setIsProcessing(false);
+      console.error("Errore durante il pagamento:", error);
       toast.error("Errore critico", {
         description: "Impossibile completare l'operazione.",
       });
