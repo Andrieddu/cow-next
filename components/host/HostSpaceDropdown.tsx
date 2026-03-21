@@ -99,7 +99,7 @@ export default function HostSpaceDropdown({ spaceId }: { spaceId: string }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="rounded-xl border-border/50 shadow-xl w-48 p-2 z-[50]"
+          className="rounded-xl border-border/50 shadow-xl w-48 p-2 z-[50] bg-white"
         >
           <Link href={`/space/${spaceId}`}>
             <DropdownMenuItem className="font-bold cursor-pointer gap-2 py-2.5">
