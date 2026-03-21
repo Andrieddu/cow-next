@@ -11,7 +11,6 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetDescription,
-  SheetClose,
 } from "@/components/ui/sheet";
 import {
   ArrowLeft,
@@ -21,15 +20,15 @@ import {
   Star,
   Receipt,
   MessageSquare,
-  AlertTriangle,
 } from "lucide-react";
 import { format, isBefore, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
+import CancelBookingButton from "@/components/profile/CancelBookingButton";
 
 // 1. IMPORTIAMO SUPABASE, IL SERVICE E I TIPI
 import { createClient } from "@/utils/supabase/server";
 import { UserService } from "@/services/user-service";
-import { SpaceType, BookingStatus } from "@/generated/prisma/client"; // Assicurati che l'import di Prisma sia corretto
+import { SpaceType, BookingStatus } from "@/generated/prisma/client";
 
 // --- HELPERS ---
 const formatSpaceType = (type: SpaceType | string) => {
@@ -362,15 +361,7 @@ export default async function BookingsPage() {
 
                           {(booking.status === "CONFIRMED" ||
                             booking.status === "PENDING") && (
-                            <SheetClose asChild>
-                              <Button
-                                variant="outline"
-                                className="w-full justify-start h-12 rounded-xl font-bold border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive gap-3 mt-4 shadow-sm"
-                              >
-                                <AlertTriangle className="h-5 w-5" /> Cancella
-                                Prenotazione
-                              </Button>
-                            </SheetClose>
+                            <CancelBookingButton bookingId={booking.id} />
                           )}
                         </div>
                       </div>

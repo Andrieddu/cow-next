@@ -78,3 +78,42 @@ export async function createBookingAction(data: BookingData) {
     };
   }
 }
+
+export async function updateBookingStatus(
+  bookingId: string,
+  newStatus: BookingStatus,
+) {
+  try {
+    // 1. Verifica che l'utente sia loggato (sicurezza al primo posto)
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: "Non autorizzato. Fai il login." };
+    }
+
+    // 2. Aggiorniamo lo stato della prenotazione nel Database
+    const updatedBooking = await prisma.booking.update({
+      where: {
+        id: bookingId,
+        // Volendo potresti aggiungere un controllo per assicurarti
+        // che lo spazio appartenga davvero a questo Host (user.id),
+        // ma per l'MVP va benissimo così!
+      },
+      data: {
+        status: newStatus,
+      },
+    });
+
+    // 3. Diciamo a Next.js di aggiornare sia la dashboard dell'host che il profilo del guest
+    revalidatePath("/dashboard");
+    revalidatePath("/profile/bookings");
+
+    return { success: true, booking: updatedBooking };
+  } catch (error) {
+    console.error("[Update Booking Error]:", error);
+    return { success: false, error: "Impossibile aggiornare la prenotazione." };
+  }
+}

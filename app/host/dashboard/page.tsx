@@ -10,8 +10,6 @@ import {
   MessageSquare,
   Star,
   Plus,
-  Check,
-  X,
   ArrowRight,
   MoreHorizontal,
   MapPin,
@@ -21,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import HostBookingActions from "@/components/host/HostBookingActions";
 
 // IMPORT DATABASE E AUTH REALI
 import { createClient } from "@/utils/supabase/server";
@@ -264,23 +263,7 @@ export default async function HostDashboardPage() {
                         </div>
 
                         {/* Tasti azione Host */}
-                        <div className="flex flex-wrap gap-3 mt-6">
-                          <Button className="rounded-xl font-bold gap-2 shadow-md shadow-accent/20 flex-1 sm:flex-none">
-                            <Check className="h-4 w-4" /> Accetta
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="rounded-xl font-bold gap-2 border-border/50 hover:bg-destructive/10 hover:text-destructive flex-1 sm:flex-none"
-                          >
-                            <X className="h-4 w-4" /> Rifiuta
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            className="rounded-xl font-bold text-muted-foreground"
-                          >
-                            Messaggio
-                          </Button>
-                        </div>
+                        <HostBookingActions bookingId={request.id} />
                       </div>
                     </div>
                   ))}
