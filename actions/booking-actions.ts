@@ -11,6 +11,7 @@ interface BookingData {
   startTime: string;
   endTime: string;
   isFullDay: boolean;
+  guests: number;
   totalPrice: number;
 }
 
@@ -55,6 +56,7 @@ export async function createBookingAction(data: BookingData) {
         startTime: data.startTime,
         endTime: data.endTime,
         isFullDay: data.isFullDay,
+        guests: data.guests,
         totalPrice: data.totalPrice,
         status: bookingStatus,
       },

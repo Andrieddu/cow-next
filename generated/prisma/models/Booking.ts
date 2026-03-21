@@ -27,10 +27,12 @@ export type AggregateBooking = {
 }
 
 export type BookingAvgAggregateOutputType = {
+  guests: number | null
   totalPrice: number | null
 }
 
 export type BookingSumAggregateOutputType = {
+  guests: number | null
   totalPrice: number | null
 }
 
@@ -42,6 +44,7 @@ export type BookingMinAggregateOutputType = {
   startTime: string | null
   endTime: string | null
   isFullDay: boolean | null
+  guests: number | null
   totalPrice: number | null
   status: $Enums.BookingStatus | null
   createdAt: Date | null
@@ -56,6 +59,7 @@ export type BookingMaxAggregateOutputType = {
   startTime: string | null
   endTime: string | null
   isFullDay: boolean | null
+  guests: number | null
   totalPrice: number | null
   status: $Enums.BookingStatus | null
   createdAt: Date | null
@@ -70,6 +74,7 @@ export type BookingCountAggregateOutputType = {
   startTime: number
   endTime: number
   isFullDay: number
+  guests: number
   totalPrice: number
   status: number
   createdAt: number
@@ -79,10 +84,12 @@ export type BookingCountAggregateOutputType = {
 
 
 export type BookingAvgAggregateInputType = {
+  guests?: true
   totalPrice?: true
 }
 
 export type BookingSumAggregateInputType = {
+  guests?: true
   totalPrice?: true
 }
 
@@ -94,6 +101,7 @@ export type BookingMinAggregateInputType = {
   startTime?: true
   endTime?: true
   isFullDay?: true
+  guests?: true
   totalPrice?: true
   status?: true
   createdAt?: true
@@ -108,6 +116,7 @@ export type BookingMaxAggregateInputType = {
   startTime?: true
   endTime?: true
   isFullDay?: true
+  guests?: true
   totalPrice?: true
   status?: true
   createdAt?: true
@@ -122,6 +131,7 @@ export type BookingCountAggregateInputType = {
   startTime?: true
   endTime?: true
   isFullDay?: true
+  guests?: true
   totalPrice?: true
   status?: true
   createdAt?: true
@@ -223,6 +233,7 @@ export type BookingGroupByOutputType = {
   startTime: string
   endTime: string
   isFullDay: boolean
+  guests: number
   totalPrice: number
   status: $Enums.BookingStatus
   createdAt: Date
@@ -260,6 +271,7 @@ export type BookingWhereInput = {
   startTime?: Prisma.StringFilter<"Booking"> | string
   endTime?: Prisma.StringFilter<"Booking"> | string
   isFullDay?: Prisma.BoolFilter<"Booking"> | boolean
+  guests?: Prisma.IntFilter<"Booking"> | number
   totalPrice?: Prisma.FloatFilter<"Booking"> | number
   status?: Prisma.EnumBookingStatusFilter<"Booking"> | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
@@ -278,6 +290,7 @@ export type BookingOrderByWithRelationInput = {
   startTime?: Prisma.SortOrder
   endTime?: Prisma.SortOrder
   isFullDay?: Prisma.SortOrder
+  guests?: Prisma.SortOrder
   totalPrice?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -299,6 +312,7 @@ export type BookingWhereUniqueInput = Prisma.AtLeast<{
   startTime?: Prisma.StringFilter<"Booking"> | string
   endTime?: Prisma.StringFilter<"Booking"> | string
   isFullDay?: Prisma.BoolFilter<"Booking"> | boolean
+  guests?: Prisma.IntFilter<"Booking"> | number
   totalPrice?: Prisma.FloatFilter<"Booking"> | number
   status?: Prisma.EnumBookingStatusFilter<"Booking"> | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
@@ -317,6 +331,7 @@ export type BookingOrderByWithAggregationInput = {
   startTime?: Prisma.SortOrder
   endTime?: Prisma.SortOrder
   isFullDay?: Prisma.SortOrder
+  guests?: Prisma.SortOrder
   totalPrice?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -339,6 +354,7 @@ export type BookingScalarWhereWithAggregatesInput = {
   startTime?: Prisma.StringWithAggregatesFilter<"Booking"> | string
   endTime?: Prisma.StringWithAggregatesFilter<"Booking"> | string
   isFullDay?: Prisma.BoolWithAggregatesFilter<"Booking"> | boolean
+  guests?: Prisma.IntWithAggregatesFilter<"Booking"> | number
   totalPrice?: Prisma.FloatWithAggregatesFilter<"Booking"> | number
   status?: Prisma.EnumBookingStatusWithAggregatesFilter<"Booking"> | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Booking"> | Date | string
@@ -351,6 +367,7 @@ export type BookingCreateInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -369,6 +386,7 @@ export type BookingUncheckedCreateInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -383,6 +401,7 @@ export type BookingUpdateInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -401,6 +420,7 @@ export type BookingUncheckedUpdateInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -417,6 +437,7 @@ export type BookingCreateManyInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -429,6 +450,7 @@ export type BookingUpdateManyMutationInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -443,6 +465,7 @@ export type BookingUncheckedUpdateManyInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -467,6 +490,7 @@ export type BookingCountOrderByAggregateInput = {
   startTime?: Prisma.SortOrder
   endTime?: Prisma.SortOrder
   isFullDay?: Prisma.SortOrder
+  guests?: Prisma.SortOrder
   totalPrice?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -474,6 +498,7 @@ export type BookingCountOrderByAggregateInput = {
 }
 
 export type BookingAvgOrderByAggregateInput = {
+  guests?: Prisma.SortOrder
   totalPrice?: Prisma.SortOrder
 }
 
@@ -485,6 +510,7 @@ export type BookingMaxOrderByAggregateInput = {
   startTime?: Prisma.SortOrder
   endTime?: Prisma.SortOrder
   isFullDay?: Prisma.SortOrder
+  guests?: Prisma.SortOrder
   totalPrice?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -499,6 +525,7 @@ export type BookingMinOrderByAggregateInput = {
   startTime?: Prisma.SortOrder
   endTime?: Prisma.SortOrder
   isFullDay?: Prisma.SortOrder
+  guests?: Prisma.SortOrder
   totalPrice?: Prisma.SortOrder
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -506,6 +533,7 @@ export type BookingMinOrderByAggregateInput = {
 }
 
 export type BookingSumOrderByAggregateInput = {
+  guests?: Prisma.SortOrder
   totalPrice?: Prisma.SortOrder
 }
 
@@ -651,6 +679,7 @@ export type BookingCreateWithoutUserInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -667,6 +696,7 @@ export type BookingUncheckedCreateWithoutUserInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -712,6 +742,7 @@ export type BookingScalarWhereInput = {
   startTime?: Prisma.StringFilter<"Booking"> | string
   endTime?: Prisma.StringFilter<"Booking"> | string
   isFullDay?: Prisma.BoolFilter<"Booking"> | boolean
+  guests?: Prisma.IntFilter<"Booking"> | number
   totalPrice?: Prisma.FloatFilter<"Booking"> | number
   status?: Prisma.EnumBookingStatusFilter<"Booking"> | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFilter<"Booking"> | Date | string
@@ -724,6 +755,7 @@ export type BookingCreateWithoutSpaceInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -740,6 +772,7 @@ export type BookingUncheckedCreateWithoutSpaceInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -780,6 +813,7 @@ export type BookingCreateWithoutPaymentInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -797,6 +831,7 @@ export type BookingUncheckedCreateWithoutPaymentInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -826,6 +861,7 @@ export type BookingUpdateWithoutPaymentInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -843,6 +879,7 @@ export type BookingUncheckedUpdateWithoutPaymentInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -856,6 +893,7 @@ export type BookingCreateWithoutConversationInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -873,6 +911,7 @@ export type BookingUncheckedCreateWithoutConversationInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -902,6 +941,7 @@ export type BookingUpdateWithoutConversationInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -919,6 +959,7 @@ export type BookingUncheckedUpdateWithoutConversationInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -933,6 +974,7 @@ export type BookingCreateManyUserInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -945,6 +987,7 @@ export type BookingUpdateWithoutUserInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -961,6 +1004,7 @@ export type BookingUncheckedUpdateWithoutUserInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -976,6 +1020,7 @@ export type BookingUncheckedUpdateManyWithoutUserInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -989,6 +1034,7 @@ export type BookingCreateManySpaceInput = {
   startTime: string
   endTime: string
   isFullDay?: boolean
+  guests?: number
   totalPrice: number
   status?: $Enums.BookingStatus
   createdAt?: Date | string
@@ -1001,6 +1047,7 @@ export type BookingUpdateWithoutSpaceInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1017,6 +1064,7 @@ export type BookingUncheckedUpdateWithoutSpaceInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1032,6 +1080,7 @@ export type BookingUncheckedUpdateManyWithoutSpaceInput = {
   startTime?: Prisma.StringFieldUpdateOperationsInput | string
   endTime?: Prisma.StringFieldUpdateOperationsInput | string
   isFullDay?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  guests?: Prisma.IntFieldUpdateOperationsInput | number
   totalPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   status?: Prisma.EnumBookingStatusFieldUpdateOperationsInput | $Enums.BookingStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1048,6 +1097,7 @@ export type BookingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   startTime?: boolean
   endTime?: boolean
   isFullDay?: boolean
+  guests?: boolean
   totalPrice?: boolean
   status?: boolean
   createdAt?: boolean
@@ -1066,6 +1116,7 @@ export type BookingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   startTime?: boolean
   endTime?: boolean
   isFullDay?: boolean
+  guests?: boolean
   totalPrice?: boolean
   status?: boolean
   createdAt?: boolean
@@ -1082,6 +1133,7 @@ export type BookingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   startTime?: boolean
   endTime?: boolean
   isFullDay?: boolean
+  guests?: boolean
   totalPrice?: boolean
   status?: boolean
   createdAt?: boolean
@@ -1098,13 +1150,14 @@ export type BookingSelectScalar = {
   startTime?: boolean
   endTime?: boolean
   isFullDay?: boolean
+  guests?: boolean
   totalPrice?: boolean
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BookingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "spaceId" | "date" | "startTime" | "endTime" | "isFullDay" | "totalPrice" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["booking"]>
+export type BookingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "spaceId" | "date" | "startTime" | "endTime" | "isFullDay" | "guests" | "totalPrice" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["booking"]>
 export type BookingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   space?: boolean | Prisma.SpaceDefaultArgs<ExtArgs>
@@ -1136,6 +1189,7 @@ export type $BookingPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     startTime: string
     endTime: string
     isFullDay: boolean
+    guests: number
     totalPrice: number
     status: $Enums.BookingStatus
     createdAt: Date
@@ -1574,6 +1628,7 @@ export interface BookingFieldRefs {
   readonly startTime: Prisma.FieldRef<"Booking", 'String'>
   readonly endTime: Prisma.FieldRef<"Booking", 'String'>
   readonly isFullDay: Prisma.FieldRef<"Booking", 'Boolean'>
+  readonly guests: Prisma.FieldRef<"Booking", 'Int'>
   readonly totalPrice: Prisma.FieldRef<"Booking", 'Float'>
   readonly status: Prisma.FieldRef<"Booking", 'BookingStatus'>
   readonly createdAt: Prisma.FieldRef<"Booking", 'DateTime'>

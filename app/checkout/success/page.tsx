@@ -10,6 +10,7 @@ import {
   Clock,
   ArrowRight,
   ReceiptText,
+  Users, // <-- AGGIUNTO L'IMPORT QUI
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { format, parseISO, isValid } from "date-fns";
@@ -28,6 +29,7 @@ function SuccessContent() {
   const startTime = searchParams.get("start") || "09:00";
   const endTime = searchParams.get("end") || "13:00";
   const isFullDay = searchParams.get("isFullDay") === "true";
+  const guests = searchParams.get("guests") || "1"; // <-- LEGGIAMO I GUESTS DALL'URL
 
   const isConfirmed = status === "CONFIRMED";
 
@@ -99,6 +101,11 @@ function SuccessContent() {
               </span>
               <span className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-accent shrink-0" /> {timeString}
+              </span>
+              {/* <-- AGGIUNTA LA RIGA DEGLI OSPITI QUI --> */}
+              <span className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-accent shrink-0" /> {guests}{" "}
+                {parseInt(guests) === 1 ? "persona" : "persone"}
               </span>
             </div>
           </div>

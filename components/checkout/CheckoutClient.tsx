@@ -122,13 +122,13 @@ export default function CheckoutClient({ space }: { space: any }) {
         startDate: startDateStr || new Date().toISOString(),
         startTime,
         endTime,
-        isFullDay, // Passiamo isFullDay come richiede il nuovo schema
+        isFullDay,
+        guests: parseInt(guests, 10),
         totalPrice,
       });
 
       // 2. Controllo esito
       if (result.success) {
-        // Se andata bene, costruiamo i parametri per la pagina Success
         const params = new URLSearchParams();
         params.set("bookingId", result.bookingId!);
         params.set("status", result.status!);
@@ -142,7 +142,6 @@ export default function CheckoutClient({ space }: { space: any }) {
         // Vai alla schermata verde!
         router.push(`/checkout/success?${params.toString()}`);
       } else {
-        // Se il DB ha rifiutato (es. Spazio rimosso)
         setIsProcessing(false);
         toast.error("Errore di prenotazione", { description: result.error });
         router.push(
@@ -150,7 +149,6 @@ export default function CheckoutClient({ space }: { space: any }) {
         );
       }
     } catch (error) {
-      // Se il server cade o non c'è internet
       setIsProcessing(false);
       toast.error("Errore critico", {
         description: "Impossibile completare l'operazione.",
@@ -213,8 +211,9 @@ export default function CheckoutClient({ space }: { space: any }) {
                     {parseInt(guests) === 1 ? "partecipante" : "partecipanti"}
                   </span>
                 </div>
+                {/* Aggiunto mantenimento dei searchParams nel tasto modifica */}
                 <Link
-                  href={`/space/${space.id}`}
+                  href={`/space/${space.id}?${searchParams.toString()}`}
                   className="font-bold text-accent hover:underline text-sm"
                 >
                   Modifica

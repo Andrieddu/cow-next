@@ -78,7 +78,7 @@ import { format, parseISO, isValid } from "date-fns";
 import { it } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
 
-// Helper MediaQuery (Versione sicura per React 18+ senza errori ESLint)
+// Helper MediaQuery
 function useMediaQuery(query: string) {
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -126,7 +126,6 @@ const getAmenityIcon = (amenity: string) => {
   return <CheckCircle className="h-6 w-6 text-accent" />;
 };
 
-// Accettiamo Space e Host dal Server
 export default function SpaceDetailClient({
   space,
   host,
@@ -138,36 +137,35 @@ export default function SpaceDetailClient({
   const searchParams = useSearchParams();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  // Catturiamo TUTTI i parametri correnti (location, date, ecc) per non perderli tornando indietro
   const currentParamsString = searchParams.toString();
   const backToSearchUrl = currentParamsString
     ? `/search?${currentParamsString}`
     : "/search";
 
-  // --- LOGICA DI LETTURA PARAMETRI URL ---
+  // --- LETTURA PARAMETRI URL ---
   const urlStartDate = searchParams.get("startDate");
   const urlEndDate = searchParams.get("endDate");
   const urlStartHour = searchParams.get("start");
   const urlEndHour = searchParams.get("end");
+  const urlGuests = searchParams.get("guests"); // <-- 1. Leggiamo i guests dall'URL
 
-  // Inizializzazione Date
   const [date, setDate] = useState<DateRange | undefined>(() => {
     const from = urlStartDate ? parseISO(urlStartDate) : new Date();
     const to = urlEndDate ? parseISO(urlEndDate) : from;
-
     return {
       from: isValid(from) ? from : new Date(),
       to: isValid(to) ? to : isValid(from) ? from : new Date(),
     };
   });
-  // Inizializzazione Orari
+
   const [startTime, setStartTime] = useState(urlStartHour || "09:00");
   const [endTime, setEndTime] = useState(urlEndHour || "13:00");
 
-  const [guests, setGuests] = useState(1);
+  // 2. Inizializziamo lo stato con il valore dell'URL, oppure 1
+  const [guests, setGuests] = useState(urlGuests ? parseInt(urlGuests, 10) : 1);
+
   const [isFullDay, setIsFullDay] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-
   const [isChecking, setIsChecking] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -206,27 +204,22 @@ export default function SpaceDetailClient({
     setTimeout(() => {
       setIsChecking(false);
       setIsModalOpen(true);
-    }, 1000); // Simuliamo la chiamata DB
+    }, 1000);
   };
 
   const handleConfirmBooking = () => {
     setIsModalOpen(false);
 
-    // Prepariamo i parametri da passare alla pagina di checkout
     const params = new URLSearchParams();
     params.set("spaceId", space.id);
 
-    if (date?.from) {
-      params.set("startDate", format(date.from, "yyyy-MM-dd"));
-    }
-    if (date?.to) {
-      params.set("endDate", format(date.to, "yyyy-MM-dd"));
-    }
+    if (date?.from) params.set("startDate", format(date.from, "yyyy-MM-dd"));
+    if (date?.to) params.set("endDate", format(date.to, "yyyy-MM-dd"));
 
     params.set("start", startTime);
     params.set("end", endTime);
 
-    // Aggiungiamo anche altre info utili per il DB
+    // 3. I guests vengono passati all'URL di checkout!
     params.set("guests", guests.toString());
     params.set("totalPrice", totalPrice.toString());
     params.set("isFullDay", isFullDay ? "true" : "false");
@@ -240,7 +233,6 @@ export default function SpaceDetailClient({
     return Math.max(1, endHour - startHour);
   }, [startTime, endTime]);
 
-  // Calcoli Prezzi & Rating dinamici
   const isHourly = !!space.hourlyPrice;
   const currentBasePrice = isFullDay
     ? space.dailyPrice || 0
@@ -253,14 +245,13 @@ export default function SpaceDetailClient({
       : space.dailyPrice || 0;
 
   const averageRating =
-    space.reviews.length > 0
+    space.reviews?.length > 0
       ? (
           space.reviews.reduce((sum: number, r: any) => sum + r.rating, 0) /
           space.reviews.length
         ).toFixed(2)
       : "Nuovo";
 
-  // Immagini Sicure (nel caso non ne abbia 5, ripete l'array)
   const defaultImage =
     "https://images.unsplash.com/photo-1497366216548-37526070297c";
   const safeImages =
@@ -336,7 +327,6 @@ export default function SpaceDetailClient({
       </div>
 
       <div className="container max-w-7xl mx-auto px-6">
-        {/* TITOLO E RATING */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-foreground">
             {space.title}
@@ -346,7 +336,7 @@ export default function SpaceDetailClient({
               <Star className="h-4 w-4 text-primary fill-primary" />
               <span className="font-bold text-foreground">{averageRating}</span>
               <span className="text-muted-foreground underline underline-offset-4 cursor-pointer">
-                ({space.reviews.length} recensioni)
+                ({space.reviews?.length || 0} recensioni)
               </span>
             </div>
             <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -361,7 +351,6 @@ export default function SpaceDetailClient({
           </div>
         </div>
 
-        {/* GALLERIA */}
         <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-3 h-[350px] md:h-[550px] rounded-[3rem] overflow-hidden mb-12 shadow-sm border border-border/50">
           <div className="md:col-span-2 md:row-span-2 relative group cursor-pointer overflow-hidden">
             <Image
@@ -395,10 +384,8 @@ export default function SpaceDetailClient({
           ))}
         </div>
 
-        {/* LAYOUT A DUE COLONNE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-8 flex flex-col gap-10">
-            {/* Sezione Host */}
             <div className="flex items-center justify-between pb-10 border-b border-border/50">
               <div>
                 <h2 className="text-2xl font-bold mb-1">
@@ -424,7 +411,6 @@ export default function SpaceDetailClient({
               <p className="text-muted-foreground leading-relaxed text-lg font-medium whitespace-pre-line line-clamp-4">
                 {space.description}
               </p>
-              {/* Bottone ripristinato */}
               <Button
                 variant="link"
                 className="p-0 h-auto font-bold text-accent text-base hover:no-underline transition-colors"
@@ -453,7 +439,6 @@ export default function SpaceDetailClient({
 
             <Separator />
 
-            {/* Sezione Mappa Ripristinata */}
             <div className="space-y-6">
               <h3 className="text-xl font-bold">Dove ti troverai</h3>
               <div className="relative w-full h-[350px] rounded-[2.5rem] overflow-hidden border border-border/50 group shadow-inner bg-secondary/20">
@@ -472,7 +457,6 @@ export default function SpaceDetailClient({
                     </div>
                   </div>
                 </div>
-                {/* Elemento Navigation Overlay */}
                 <div className="absolute bottom-6 left-6">
                   <div className="bg-background/90 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-border/50 flex items-center gap-4">
                     <div className="p-2 bg-secondary/10 rounded-lg">
@@ -489,7 +473,6 @@ export default function SpaceDetailClient({
                   </div>
                 </div>
               </div>
-              {/* Griglia info aggiuntive mappa */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                 <div className="flex flex-col gap-2 p-5 bg-secondary/5 rounded-2xl border border-border/50">
                   <span className="text-xs font-bold uppercase tracking-widest text-accent">
@@ -512,7 +495,6 @@ export default function SpaceDetailClient({
             </div>
           </div>
 
-          {/* COLONNA DESTRA (Box Prenotazione) */}
           <div className="lg:col-span-4 relative">
             <div className="sticky top-28 bg-background border border-border/50 rounded-[2.5rem] p-8 shadow-2xl shadow-border/10 overflow-hidden">
               <div className="flex items-end justify-between mb-8">
@@ -766,7 +748,6 @@ export default function SpaceDetailClient({
         </div>
       </div>
 
-      {/* --- RESPONSIVE MODAL: DIALOG (DESKTOP) o DRAWER (MOBILE) --- */}
       {isDesktop ? (
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-6 gap-6">

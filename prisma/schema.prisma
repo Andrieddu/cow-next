@@ -123,6 +123,7 @@ model Booking {
   startTime     String        // Se isFullDay è true, sarà l'orario di apertura (es. "09:00")
   endTime       String        // Se isFullDay è true, sarà l'orario di chiusura (es. "18:00")
   isFullDay     Boolean       @default(false) // Se true, ignora le ore e usa dailyPrice
+  guests        Int           @default(1)
   totalPrice    Float
   status        BookingStatus @default(PENDING)
   payment       Payment?

@@ -1262,6 +1262,7 @@ export const BookingScalarFieldEnum = {
   startTime: 'startTime',
   endTime: 'endTime',
   isFullDay: 'isFullDay',
+  guests: 'guests',
   totalPrice: 'totalPrice',
   status: 'status',
   createdAt: 'createdAt',
