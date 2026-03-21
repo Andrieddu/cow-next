@@ -77,6 +77,7 @@ import { cn } from "@/lib/utils";
 import { format, parseISO, isValid } from "date-fns";
 import { it } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
+import { checkAvailability } from "@/actions/booking-actions";
 
 // Helper MediaQuery
 function useMediaQuery(query: string) {
@@ -195,16 +196,42 @@ export default function SpaceDetailClient({
     else toast.info("Rimosso dai preferiti");
   };
 
-  const handleCheckAvailability = () => {
+  const handleCheckAvailability = async () => {
     if (!date?.from) {
       toast.error("Seleziona una data per procedere.");
       return;
     }
+
     setIsChecking(true);
-    setTimeout(() => {
+
+    try {
+      // Chiamiamo il database REALE per controllare la disponibilità
+      const result = await checkAvailability(
+        space.id,
+        format(date.from, "yyyy-MM-dd"),
+        startTime,
+        endTime,
+        guests,
+      );
+
+      if (result.available) {
+        // Se c'è posto, apriamo la modale per andare al checkout
+        setIsModalOpen(true);
+      } else {
+        // Se non c'è posto, mostriamo l'errore calcolato dal server (es. "Ci sono solo 2 posti disponibili")
+        toast.error("Non disponibile", {
+          description: result.error,
+          duration: 5000, // Lo teniamo visibile un po' di più per farlo leggere bene
+        });
+      }
+    } catch (error) {
+      console.error("Errore durante il controllo della disponibilità:", error);
+      toast.error("Errore di connessione", {
+        description: "Impossibile verificare la disponibilità al momento.",
+      });
+    } finally {
       setIsChecking(false);
-      setIsModalOpen(true);
-    }, 1000);
+    }
   };
 
   const handleConfirmBooking = () => {
