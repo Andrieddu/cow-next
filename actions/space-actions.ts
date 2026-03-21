@@ -1,5 +1,6 @@
 "use server";
 
+import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { createClient } from "@/utils/supabase/server";
 import { SpaceService } from "@/services/space-service";
@@ -114,5 +115,63 @@ export async function createSpaceAction(prevState: any, formData: FormData) {
       status: 500,
       error: "Impossibile salvare lo spazio. Riprova più tardi.",
     };
+  }
+}
+
+export async function updateSpaceAction(prevState: any, formData: FormData) {
+  try {
+    const spaceId = formData.get("spaceId") as string;
+    const title = formData.get("title") as string;
+    const type = formData.get("type") as any;
+    const capacity = parseInt(formData.get("capacity") as string, 10);
+    const description = formData.get("description") as string;
+    const address = formData.get("address") as string;
+    const city = formData.get("city") as string;
+    const openingTime = formData.get("openingTime") as string;
+    const closingTime = formData.get("closingTime") as string;
+    const hourlyPrice = formData.get("hourlyPrice")
+      ? parseFloat(formData.get("hourlyPrice") as string)
+      : null;
+    const dailyPrice = formData.get("dailyPrice")
+      ? parseFloat(formData.get("dailyPrice") as string)
+      : null;
+    const instantBooking = formData.get("instantBooking") === "on";
+
+    const actionType = formData.get("actionType") as string;
+    const isActive = actionType === "publish";
+
+    const openDays = formData
+      .getAll("openDays")
+      .map((d) => parseInt(d as string, 10));
+    const amenities = formData.getAll("amenities") as string[];
+
+    await prisma.space.update({
+      where: { id: spaceId },
+      data: {
+        title,
+        type,
+        capacity,
+        description,
+        address,
+        city,
+        openingTime,
+        closingTime,
+        hourlyPrice,
+        dailyPrice,
+        instantBooking,
+        isActive,
+        openDays,
+        amenities,
+      },
+    });
+
+    revalidatePath("/host/listing");
+    revalidatePath("/host/dashboard");
+    revalidatePath(`/space/${spaceId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Errore aggiornamento:", error);
+    return { success: false, error: "Errore durante l'aggiornamento." };
   }
 }
