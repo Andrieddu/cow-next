@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import HostBookingActions from "@/components/host/HostBookingActions";
+import HostBookingCard from "@/components/host/HostBookingCard";
 
 // IMPORT DATABASE E AUTH REALI
 import { createClient } from "@/utils/supabase/server";
@@ -294,37 +295,7 @@ export default async function HostDashboardPage() {
               ) : (
                 <div className="flex flex-col gap-4">
                   {upcomingArrivals.map((arrival) => (
-                    <div
-                      key={arrival.id}
-                      className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col sm:flex-row items-center gap-6"
-                    >
-                      <div className="bg-secondary/10 rounded-2xl w-16 h-16 flex flex-col items-center justify-center shrink-0">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
-                          {format(new Date(arrival.date), "MMM", {
-                            locale: it,
-                          })}
-                        </span>
-                        <span className="text-xl font-black">
-                          {format(new Date(arrival.date), "dd")}
-                        </span>
-                      </div>
-                      <div className="flex-1 text-center sm:text-left">
-                        <h4 className="font-bold text-lg mb-1">
-                          {arrival.guest?.name} {arrival.guest?.surname}
-                        </h4>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          {arrival.space?.title} • {arrival.startTime} -{" "}
-                          {arrival.endTime}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        className="rounded-xl font-bold border-border/50 w-full sm:w-auto gap-2"
-                      >
-                        Dettagli{" "}
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                    </div>
+                    <HostBookingCard key={arrival.id} arrival={arrival} />
                   ))}
                 </div>
               )}
