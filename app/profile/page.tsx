@@ -1,17 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetDescription,
-} from "@/components/ui/sheet";
 import {
   Mail,
   Phone,
@@ -20,62 +10,16 @@ import {
   Settings,
   Edit2,
   LogOut,
-  Clock,
-  Receipt,
   MessageSquare,
 } from "lucide-react";
-import { format } from "date-fns";
-import { it } from "date-fns/locale";
-import CancelBookingButton from "@/components/profile/CancelBookingButton";
+import BookingCardClient from "@/components/profile/BookingCardClient";
 
 // 1. IMPORTIAMO SUPABASE E IL REDIRECT
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { logout } from "@/actions/auth-actions"; // Importiamo l'azione di logout
+import { logout } from "@/actions/auth-actions";
 
 import { UserService } from "@/services/user-service";
-import { SpaceType, BookingStatus } from "@/generated/prisma/client";
-
-// --- HELPERS ---
-const formatSpaceType = (type: SpaceType) => {
-  const types: Record<SpaceType, string> = {
-    DESK: "Desk",
-    PRIVATE_OFFICE: "Ufficio Privato",
-    MEETING_ROOM: "Sala Meeting",
-    EVENT_SPACE: "Sala Eventi",
-  };
-  return types[type] || type;
-};
-
-const formatStatus = (status: BookingStatus) => {
-  switch (status) {
-    case "CONFIRMED":
-      return "Confermata";
-    case "PENDING":
-      return "In Attesa";
-    case "CANCELLED":
-      return "Annullata";
-    case "COMPLETED":
-      return "Completata";
-    default:
-      return status;
-  }
-};
-
-const getStatusColor = (status: BookingStatus) => {
-  switch (status) {
-    case "CONFIRMED":
-      return "bg-primary/10 text-primary-foreground border-primary/30";
-    case "PENDING":
-      return "bg-amber-500/10 text-amber-700 border-amber-500/30";
-    case "CANCELLED":
-      return "bg-destructive/10 text-destructive border-destructive/30";
-    case "COMPLETED":
-      return "bg-green-500/10 text-green-700 border-green-500/30";
-    default:
-      return "bg-secondary/10 text-foreground border-border/50";
-  }
-};
 
 export default async function ProfilePage() {
   // 2. RECUPERO UTENTE LOGGATO
@@ -290,194 +234,7 @@ export default async function ProfilePage() {
                 const space = booking.space;
                 if (!space) return null;
 
-                const host = space.host;
-                const monthShort = format(booking.date, "MMM", { locale: it });
-                const day = format(booking.date, "dd");
-                const fullDateStr = format(booking.date, "EEEE dd MMMM yyyy", {
-                  locale: it,
-                });
-
-                return (
-                  <Sheet key={booking.id}>
-                    <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 hover:shadow-md transition-shadow flex flex-col sm:flex-row items-start sm:items-center gap-6 relative overflow-hidden">
-                      <div className="bg-accent/10 rounded-2xl w-20 h-20 flex flex-col items-center justify-center shrink-0 border border-accent/20">
-                        <span className="text-sm font-bold text-accent uppercase tracking-widest">
-                          {monthShort}
-                        </span>
-                        <span className="text-2xl font-bold text-foreground leading-none mt-1">
-                          {day}
-                        </span>
-                      </div>
-
-                      <div className="flex-1 overflow-hidden">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div
-                            className={cn(
-                              "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest",
-                              getStatusColor(booking.status),
-                            )}
-                          >
-                            {formatStatus(booking.status)}
-                          </div>
-                          <div className="inline-flex items-center rounded-full border border-border/50 bg-secondary/5 px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">
-                            {formatSpaceType(space.type)}
-                          </div>
-                        </div>
-
-                        <h4 className="text-lg font-bold mb-1 truncate max-w-sm">
-                          {space.title}
-                        </h4>
-                        <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-muted-foreground">
-                          <span className="flex items-center gap-1.5">
-                            <Clock className="h-4 w-4 text-accent shrink-0" />{" "}
-                            {booking.startTime} - {booking.endTime}
-                          </span>
-                          <span className="flex items-center gap-1.5 truncate">
-                            <MapPin className="h-4 w-4 text-accent shrink-0" />{" "}
-                            {space.city}
-                          </span>
-                        </div>
-                      </div>
-
-                      <SheetTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="rounded-xl font-bold border-border/50 hover:bg-accent/10 hover:text-accent hover:border-accent/30 w-full sm:w-auto h-11 shrink-0"
-                        >
-                          Dettagli
-                        </Button>
-                      </SheetTrigger>
-                    </div>
-
-                    <SheetContent className="w-full sm:max-w-md bg-background border-l border-border/50 overflow-y-auto z-[100] p-0 flex flex-col">
-                      <SheetHeader className="text-left pt-8 px-6 sm:px-8 mb-6">
-                        <div
-                          className={cn(
-                            "inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest w-fit mb-4",
-                            getStatusColor(booking.status),
-                          )}
-                        >
-                          {formatStatus(booking.status)}
-                        </div>
-                        <SheetTitle className="text-3xl font-bold tracking-tight">
-                          Dettagli sessione
-                        </SheetTitle>
-                        <SheetDescription className="text-base font-medium">
-                          {booking.status === "CONFIRMED"
-                            ? `Tutto pronto per la tua giornata presso ${space.title}.`
-                            : "In attesa di conferma dall'Host."}
-                        </SheetDescription>
-                      </SheetHeader>
-
-                      <div className="px-6 sm:px-8 pb-8 space-y-8 flex-1">
-                        <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-border/50 shadow-sm bg-muted">
-                          <Image
-                            src={space.imageUrls[0]}
-                            alt={space.title}
-                            fill
-                            unoptimized
-                            className="object-cover"
-                          />
-                        </div>
-
-                        <div className="bg-secondary/5 border border-border/50 rounded-2xl p-6 space-y-6 shadow-sm">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
-                              Data e Ora
-                            </span>
-                            <span className="font-bold text-foreground capitalize">
-                              {fullDateStr} • {booking.startTime} -{" "}
-                              {booking.endTime}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
-                              Indirizzo
-                            </span>
-                            <span className="font-bold text-foreground">
-                              {space.address}
-                              <br />
-                              {space.city}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
-                              Codice Prenotazione
-                            </span>
-                            <span className="font-mono font-bold text-foreground">
-                              #{booking.id.toUpperCase()}
-                            </span>
-                          </div>
-                          <Separator className="bg-border/50" />
-                          <div className="flex items-center justify-between text-lg">
-                            <span className="font-bold">Importo Totale</span>
-                            <span className="font-extrabold text-accent">
-                              €{booking.totalPrice.toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between border-y border-border/50 py-6">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-full border border-border/50 bg-secondary/20 overflow-hidden shadow-sm relative">
-                              <Image
-                                src={
-                                  host?.image || "https://github.com/shadcn.png"
-                                }
-                                alt="Host"
-                                fill
-                                unoptimized
-                                className="object-cover"
-                              />
-                            </div>
-                            <div>
-                              <p className="font-bold text-sm">
-                                Ospitato da {host?.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground font-medium text-accent">
-                                Host Verificato
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-full bg-accent/10 hover:bg-accent/20 text-accent"
-                          >
-                            <MessageSquare className="h-5 w-5" />
-                          </Button>
-                        </div>
-
-                        <div className="flex flex-col gap-3">
-                          {(booking.status === "CONFIRMED" ||
-                            booking.status === "COMPLETED") && (
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
-                            >
-                              <Receipt className="h-5 w-5 text-muted-foreground" />{" "}
-                              Scarica Ricevuta
-                            </Button>
-                          )}
-
-                          <Link href={`/space/${space.id}`} className="w-full">
-                            <Button
-                              variant="outline"
-                              className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
-                            >
-                              <MapPin className="h-5 w-5 text-muted-foreground" />{" "}
-                              Rivedi annuncio
-                            </Button>
-                          </Link>
-                          {(booking.status === "CONFIRMED" ||
-                            booking.status === "PENDING") && (
-                            <CancelBookingButton bookingId={booking.id} />
-                          )}
-                        </div>
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-                );
+                return <BookingCardClient key={booking.id} booking={booking} />;
               })
             )}
 
