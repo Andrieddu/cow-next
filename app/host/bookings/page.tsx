@@ -10,7 +10,6 @@ import {
   Calendar,
   Clock,
   Users,
-  MoreVertical,
   Download,
   ChevronDown,
   CheckCircle2,
@@ -26,12 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import HostBookingDropdown from "@/components/host/HostBookingDropdown";
 
 // IMPORT DATABASE E AUTH REALI
 import { createClient } from "@/utils/supabase/server";
@@ -293,51 +287,11 @@ export default async function HostBookingsPage() {
                       {getStatusLabel(booking.status)}
                     </Badge>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="rounded-full shrink-0"
-                        >
-                          <MoreVertical className="h-5 w-5 text-muted-foreground" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="rounded-xl border-border/50 shadow-xl w-48"
-                      >
-                        <DropdownMenuItem className="font-bold cursor-pointer">
-                          Vedi dettagli
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="font-bold cursor-pointer">
-                          Contatta ospite
-                        </DropdownMenuItem>
-                        {(booking.status === "CONFIRMED" ||
-                          booking.status === "COMPLETED") && (
-                          <DropdownMenuItem className="font-bold cursor-pointer">
-                            Scarica ricevuta
-                          </DropdownMenuItem>
-                        )}
-                        {booking.status === "PENDING" && (
-                          <>
-                            <Separator className="my-1" />
-                            <DropdownMenuItem className="font-bold cursor-pointer text-green-600">
-                              Approva prenotazione
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        {(booking.status === "PENDING" ||
-                          booking.status === "CONFIRMED") && (
-                          <>
-                            <Separator className="my-1" />
-                            <DropdownMenuItem className="font-bold cursor-pointer text-destructive">
-                              Annulla prenotazione
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {/* ECCO IL NUOVO MENU REALE */}
+                    <HostBookingDropdown
+                      bookingId={booking.id}
+                      status={booking.status}
+                    />
                   </div>
                 </div>
               </div>
