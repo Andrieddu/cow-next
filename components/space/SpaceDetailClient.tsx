@@ -28,6 +28,7 @@ import {
   Monitor,
   CheckCircle,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -169,6 +170,9 @@ export default function SpaceDetailClient({
   const [isSaved, setIsSaved] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(
+    null,
+  );
 
   const handleShare = async () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
@@ -203,9 +207,9 @@ export default function SpaceDetailClient({
     }
 
     setIsChecking(true);
+    setAvailabilityError(null); // Resettiamo l'errore precedente
 
     try {
-      // Chiamiamo il database REALE per controllare la disponibilità
       const result = await checkAvailability(
         space.id,
         format(date.from, "yyyy-MM-dd"),
@@ -215,14 +219,9 @@ export default function SpaceDetailClient({
       );
 
       if (result.available) {
-        // Se c'è posto, apriamo la modale per andare al checkout
-        setIsModalOpen(true);
+        setIsModalOpen(true); // Modale Verde (OK)
       } else {
-        // Se non c'è posto, mostriamo l'errore calcolato dal server (es. "Ci sono solo 2 posti disponibili")
-        toast.error("Non disponibile", {
-          description: result.error,
-          duration: 5000, // Lo teniamo visibile un po' di più per farlo leggere bene
-        });
+        setAvailabilityError(result.error || "Spazio non disponibile."); // Modale Rossa (Errore)
       }
     } catch (error) {
       console.error("Errore durante il controllo della disponibilità:", error);
@@ -775,18 +774,24 @@ export default function SpaceDetailClient({
         </div>
       </div>
 
+      {/* --- MODALE DISPONIBILITÀ (SUCCESSO) --- */}
       {isDesktop ? (
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-6 gap-6">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">
-                Spazio Disponibile!
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-foreground">
+                {/* Icona della spunta, colorata di giallo come il bottone primario */}
+                <CheckCircle className="h-6 w-6 text-primary" /> Spazio
+                Disponibile!
               </DialogTitle>
-              <DialogDescription className="text-base">
-                Ottime notizie, {space.title} è libero per le date selezionate.
+              <DialogDescription className="text-base text-foreground font-medium mt-2">
+                Ottime notizie, <span className="font-bold">{space.title}</span>{" "}
+                è libero per le date selezionate.
               </DialogDescription>
             </DialogHeader>
+
             {BookingSummaryContent}
+
             <DialogFooter className="flex-col sm:flex-col gap-3 sm:space-x-0">
               <Button
                 onClick={handleConfirmBooking}
@@ -807,18 +812,24 @@ export default function SpaceDetailClient({
       ) : (
         <Drawer open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DrawerContent className="rounded-t-[2rem]">
-            <div className="p-6 pb-8 gap-6 flex flex-col">
-              <DrawerHeader className="px-0 text-left">
-                <DrawerTitle className="text-2xl font-bold">
-                  Spazio Disponibile! 🎉
+            <div className="p-6 pb-8 gap-6 flex flex-col items-center text-center">
+              {/* Layout centrato coerente con il Drawer di errore */}
+              <DrawerHeader className="px-0 flex flex-col items-center w-full">
+                <DrawerTitle className="text-2xl font-bold flex flex-col sm:flex-row items-center justify-center gap-2 text-foreground">
+                  <CheckCircle className="h-8 w-8 mb-2 sm:mb-0 text-primary" />{" "}
+                  Spazio Disponibile!
                 </DrawerTitle>
-                <DrawerDescription className="text-base">
-                  Ottime notizie, {space.title} è libero per le date
-                  selezionate.
+                <DrawerDescription className="text-base text-foreground font-medium mt-3 max-w-[280px]">
+                  Ottime notizie,{" "}
+                  <span className="font-bold">{space.title}</span> è libero per
+                  le date selezionate.
                 </DrawerDescription>
               </DrawerHeader>
-              {BookingSummaryContent}
-              <DrawerFooter className="px-0 flex-col gap-3">
+
+              {/* Riepilogo allineato a sinistra per leggibilità */}
+              <div className="w-full text-left">{BookingSummaryContent}</div>
+
+              <DrawerFooter className="px-0 flex-col gap-3 w-full mt-2">
                 <Button
                   onClick={handleConfirmBooking}
                   className="w-full rounded-xl h-12 font-bold text-base"
@@ -831,6 +842,69 @@ export default function SpaceDetailClient({
                   className="w-full rounded-xl font-bold text-muted-foreground"
                 >
                   Annulla
+                </Button>
+              </DrawerFooter>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
+
+      {/* --- MODALE ERRORE DISPONIBILITÀ --- */}
+      {isDesktop ? (
+        <Dialog
+          open={!!availabilityError}
+          onOpenChange={(open) => !open && setAvailabilityError(null)}
+        >
+          <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-6 gap-6 border-destructive/20">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-destructive">
+                <AlertCircle className="h-6 w-6" /> Non disponibile
+              </DialogTitle>
+              <DialogDescription className="text-base text-foreground font-medium mt-2">
+                {availabilityError}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="bg-destructive/5 rounded-xl p-4 border border-destructive/10 text-sm text-muted-foreground">
+              Prova a modificare l orario, ridurre il numero di partecipanti o
+              scegliere un altra data.
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => setAvailabilityError(null)}
+                className="w-full rounded-xl h-12 font-bold"
+              >
+                Modifica ricerca
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <Drawer
+          open={!!availabilityError}
+          onOpenChange={(open) => !open && setAvailabilityError(null)}
+        >
+          <DrawerContent className="rounded-t-[2rem] border-destructive/20">
+            <div className="p-6 pb-8 gap-6 flex flex-col items-center text-center">
+              {/* Rimossa la classe px-0 text-left e aggiunto l'allineamento al centro per i figli */}
+              <DrawerHeader className="px-0 flex flex-col items-center w-full">
+                <DrawerTitle className="text-2xl font-bold flex flex-col sm:flex-row items-center justify-center gap-2 text-destructive">
+                  <AlertCircle className="h-8 w-8 mb-2 sm:mb-0" /> Non
+                  disponibile
+                </DrawerTitle>
+                <DrawerDescription className="text-base text-foreground font-medium mt-3 max-w-[280px]">
+                  {availabilityError}
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className="bg-destructive/5 rounded-xl p-4 border border-destructive/10 text-sm text-muted-foreground w-full">
+                Prova a modificare l orario, ridurre il numero di partecipanti o
+                scegliere un altra data.
+              </div>
+              <DrawerFooter className="px-0 w-full mt-2">
+                <Button
+                  onClick={() => setAvailabilityError(null)}
+                  className="w-full rounded-xl h-12 font-bold"
+                >
+                  Modifica ricerca
                 </Button>
               </DrawerFooter>
             </div>
