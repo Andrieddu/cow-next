@@ -46,9 +46,8 @@ export default async function HostDashboardPage() {
   // 2. RECUPERO DATI REALI DAL DATABASE
   const hostSpaces = await HostService.getDashboardData(user.id);
 
-  // 3. CALCOLI STATISTICHE (Eseguiti alla velocità della luce sul server)
-
-  // Appiattiamo tutte le prenotazioni in un unico array e aggiungiamo le info dello spazio
+  // 3. CALCOLI STATISTICHE SUI DATI REALI
+  // // Appiattiamo tutte le prenotazioni in un unico array e aggiungiamo le info dello spazio
   const hostBookings = hostSpaces.flatMap((space) =>
     space.bookings.map((booking) => ({
       ...booking,
@@ -56,17 +55,14 @@ export default async function HostDashboardPage() {
       guest: booking.user, // Rinominiamo 'user' in 'guest' per chiarezza
     })),
   );
-
   // Guadagni (Somma totalPrice delle prenotazioni CONFIRMED o COMPLETED)
   const totalEarnings = hostBookings
     .filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED")
     .reduce((sum, b) => sum + b.totalPrice, 0);
-
   // Numero prenotazioni attive/confermate
   const totalBookingsCount = hostBookings.filter(
     (b) => b.status !== "CANCELLED",
   ).length;
-
   // Media recensioni dell'host
   const allReviews = hostSpaces.flatMap((space) => space.reviews);
   const hostAverageRating =
@@ -76,9 +72,8 @@ export default async function HostDashboardPage() {
           allReviews.reduce((acc, r) => acc + r.rating, 0) / allReviews.length
         ).toFixed(2);
 
-  // Richieste in sospeso (PENDING)
+  // 4. RICERCA LE PRENOTAZIONI REALI 'PENDING'
   const pendingRequests = hostBookings.filter((b) => b.status === "PENDING");
-
   // Prossimi arrivi (Confermati, futuri o di oggi, presi i primi 3)
   const upcomingArrivals = hostBookings
     .filter(
@@ -90,6 +85,7 @@ export default async function HostDashboardPage() {
 
   return (
     <main className="flex flex-col w-full min-h-screen bg-secondary/5 pb-20">
+      {" "}
       {/* 1. HEADER DELLA DASHBOARD */}
       <div className="bg-background border-b border-border/50 sticky top-0 z-30">
         <div className="container max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -112,11 +108,10 @@ export default async function HostDashboardPage() {
           </Link>
         </div>
       </div>
-
       <div className="container max-w-7xl mx-auto px-6 pt-10">
         {/* 2. STATISTICHE MENSILI */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {/* Guadagni */}
+          {/* ... Card Guadagni ... */}
           <Link href="/host/earnings" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -138,7 +133,7 @@ export default async function HostDashboardPage() {
             </div>
           </Link>
 
-          {/* Prenotazioni */}
+          {/* ... Card Prenotazioni ... */}
           <Link href="/host/bookings" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -160,7 +155,7 @@ export default async function HostDashboardPage() {
             </div>
           </Link>
 
-          {/* Messaggi (Ancora fittizio, lo collegheremo dopo) */}
+          {/* ... Card Messaggi ... */}
           <Link href="/messages" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -182,7 +177,7 @@ export default async function HostDashboardPage() {
             </div>
           </Link>
 
-          {/* Valutazione Media */}
+          {/* ... Card Valutazioni ... */}
           <Link href="/host/reviews" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -204,12 +199,11 @@ export default async function HostDashboardPage() {
             </div>
           </Link>
         </div>
-
         {/* 3. LAYOUT PRINCIPALE A DUE COLONNE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* COLONNA SINISTRA: Richieste e Attività */}
+          {/* COLONNA SINISTRA: Richieste e Attività */}{" "}
           <div className="lg:col-span-8 space-y-10">
-            {/* Sezione Richieste in sospeso */}
+            {/* --- SEZIONE RICHIESTE IN SOSPESO --- */}
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold tracking-tight">
@@ -248,7 +242,7 @@ export default async function HostDashboardPage() {
                       <div className="flex-1 w-full">
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-bold text-lg">
-                            {request.space.title}
+                            {request.space?.title}
                           </h4>
                           <span className="font-extrabold text-lg text-accent">
                             € {request.totalPrice.toFixed(2)}
@@ -257,9 +251,11 @@ export default async function HostDashboardPage() {
                         <div className="flex flex-col gap-2 text-sm font-medium text-muted-foreground mb-4">
                           <span className="flex items-center gap-2 capitalize">
                             <CalendarIcon className="h-4 w-4" />{" "}
-                            {format(request.date, "EEEE dd MMM yyyy", {
-                              locale: it,
-                            })}{" "}
+                            {format(
+                              new Date(request.date),
+                              "EEEE dd MMM yyyy",
+                              { locale: it },
+                            )}{" "}
                             • {request.startTime} - {request.endTime}
                           </span>
                           <span className="flex items-center gap-2">
@@ -267,6 +263,7 @@ export default async function HostDashboardPage() {
                           </span>
                         </div>
 
+                        {/* Tasti azione Host */}
                         <div className="flex flex-wrap gap-3 mt-6">
                           <Button className="rounded-xl font-bold gap-2 shadow-md shadow-accent/20 flex-1 sm:flex-none">
                             <Check className="h-4 w-4" /> Accetta
@@ -291,7 +288,7 @@ export default async function HostDashboardPage() {
               )}
             </section>
 
-            {/* Sezione Arrivi Confermati */}
+            {/* --- SEZIONE ARRIVI CONFERMATI --- */}
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold tracking-tight">
@@ -320,10 +317,12 @@ export default async function HostDashboardPage() {
                     >
                       <div className="bg-secondary/10 rounded-2xl w-16 h-16 flex flex-col items-center justify-center shrink-0">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
-                          {format(arrival.date, "MMM", { locale: it })}
+                          {format(new Date(arrival.date), "MMM", {
+                            locale: it,
+                          })}
                         </span>
                         <span className="text-xl font-black">
-                          {format(arrival.date, "dd")}
+                          {format(new Date(arrival.date), "dd")}
                         </span>
                       </div>
                       <div className="flex-1 text-center sm:text-left">
@@ -331,7 +330,7 @@ export default async function HostDashboardPage() {
                           {arrival.guest?.name} {arrival.guest?.surname}
                         </h4>
                         <p className="text-sm font-medium text-muted-foreground">
-                          {arrival.space.title} • {arrival.startTime} -{" "}
+                          {arrival.space?.title} • {arrival.startTime} -{" "}
                           {arrival.endTime}
                         </p>
                       </div>
@@ -348,7 +347,6 @@ export default async function HostDashboardPage() {
               )}
             </section>
           </div>
-
           {/* COLONNA DESTRA: I tuoi Spazi */}
           <div className="lg:col-span-4 space-y-6">
             <div className="flex items-center justify-between mb-2">

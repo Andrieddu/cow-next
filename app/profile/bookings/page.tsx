@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -25,13 +26,14 @@ import {
 import { format, isBefore, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
 
-// 1. IMPORTIAMO IL SERVICE E I TIPI
+// 1. IMPORTIAMO SUPABASE, IL SERVICE E I TIPI
+import { createClient } from "@/utils/supabase/server";
 import { UserService } from "@/services/user-service";
-import { SpaceType, BookingStatus } from "@/generated/prisma/client";
+import { SpaceType, BookingStatus } from "@/generated/prisma/client"; // Assicurati che l'import di Prisma sia corretto
 
 // --- HELPERS ---
-const formatSpaceType = (type: SpaceType) => {
-  const types: Record<SpaceType, string> = {
+const formatSpaceType = (type: SpaceType | string) => {
+  const types: Record<string, string> = {
     DESK: "Desk",
     PRIVATE_OFFICE: "Ufficio Privato",
     MEETING_ROOM: "Sala Meeting",
@@ -40,7 +42,7 @@ const formatSpaceType = (type: SpaceType) => {
   return types[type] || type;
 };
 
-const formatStatus = (status: BookingStatus) => {
+const formatStatus = (status: BookingStatus | string) => {
   switch (status) {
     case "CONFIRMED":
       return "Confermata";
@@ -55,30 +57,67 @@ const formatStatus = (status: BookingStatus) => {
   }
 };
 
-// 2. TRASFORMAZIONE IN SERVER COMPONENT (async)
+// Funzione helper cn
+function cn(...inputs: any[]) {
+  return inputs.filter(Boolean).join(" ");
+}
+
+// Funzione helper colori stati
+const getStatusColor = (status: BookingStatus | string) => {
+  switch (status) {
+    case "CONFIRMED":
+      return "bg-primary/10 text-primary-foreground border-primary/30";
+    case "PENDING":
+      return "bg-amber-500/10 text-amber-700 border-amber-500/30";
+    case "CANCELLED":
+      return "bg-destructive/10 text-destructive border-destructive/30";
+    case "COMPLETED":
+      return "bg-green-500/10 text-green-700 border-green-500/30";
+    default:
+      return "bg-secondary/10 text-foreground border-border/50";
+  }
+};
+
+// 2. SERVER COMPONENT
 export default async function BookingsPage() {
-  // 3. RECUPERO DATI DAL DB (Luigi Verdi)
-  const currentUser = await UserService.getProfileWithBookings("seed-guest-1");
+  // 3. AUTENTICAZIONE REALE CON SUPABASE
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  // 4. RECUPERO DATI DAL DB (Usiamo l'ID vero dell'utente loggato)
+  const currentUser = await UserService.getProfileWithBookings(user.id);
 
   if (!currentUser) {
     return (
-      <div className="p-20 text-center font-bold">
-        Utente non trovato. Fai il login.
+      <div className="p-20 text-center flex flex-col items-center gap-4">
+        <h2 className="text-xl font-bold">Utente non trovato</h2>
+        <p className="text-muted-foreground">
+          Assicurati di aver completato la configurazione del profilo.
+        </p>
+        <Link href="/profile">
+          <Button>Vai al Profilo</Button>
+        </Link>
       </div>
     );
   }
 
-  // 4. LOGICA DI DIVISIONE PRENOTAZIONI (In arrivo vs Passate)
+  // 5. LOGICA DI DIVISIONE PRENOTAZIONI (In arrivo vs Passate)
   const allBookings = currentUser.bookings || [];
   const today = startOfDay(new Date());
 
   // In arrivo: Oggi o nel futuro
   const upcomingBookings = allBookings.filter(
-    (b) => !isBefore(new Date(b.date), today),
+    (b: any) => !isBefore(new Date(b.date), today),
   );
 
   // Passate: Nel passato
-  const pastBookings = allBookings.filter((b) =>
+  const pastBookings = allBookings.filter((b: any) =>
     isBefore(new Date(b.date), today),
   );
 
@@ -133,9 +172,14 @@ export default async function BookingsPage() {
                 <p className="text-muted-foreground font-bold">
                   Nessuna prenotazione in arrivo.
                 </p>
+                <Link href="/search">
+                  <Button className="mt-4 rounded-xl font-bold">
+                    Trova uno spazio
+                  </Button>
+                </Link>
               </div>
             ) : (
-              upcomingBookings.map((booking) => {
+              upcomingBookings.map((booking: any) => {
                 const space = booking.space;
                 const host = space?.host;
                 const month = format(new Date(booking.date), "MMM", {
@@ -157,12 +201,11 @@ export default async function BookingsPage() {
                         </span>
                       </div>
 
-                      <div className="flex-1">
+                      <div className="flex-1 w-full">
                         <div className="flex items-center gap-3 mb-2">
                           <div className="inline-flex items-center rounded-full border border-border/50 bg-secondary/5 px-3 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                            {formatSpaceType(space?.type as SpaceType)}
+                            {formatSpaceType(space?.type)}
                           </div>
-                          {/* FIX: Badge card uguale alla sidebar */}
                           <div
                             className={cn(
                               "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest",
@@ -172,22 +215,22 @@ export default async function BookingsPage() {
                             {formatStatus(booking.status)}
                           </div>
                         </div>
-                        <h4 className="text-xl font-bold mb-2">
+                        <h4 className="text-xl font-bold mb-2 truncate">
                           {space?.title}
                         </h4>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm font-medium text-muted-foreground">
-                          <span className="flex items-center gap-2">
+                          <span className="flex items-center gap-2 shrink-0">
                             <Clock className="h-4 w-4 text-accent" />{" "}
                             {booking.startTime} - {booking.endTime}
                           </span>
-                          <span className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-accent" />{" "}
+                          <span className="flex items-center gap-2 truncate">
+                            <MapPin className="h-4 w-4 text-accent shrink-0" />{" "}
                             {space?.address}, {space?.city}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-border/50 md:pl-6">
+                      <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-border/50 md:pl-6 shrink-0">
                         <SheetTrigger asChild>
                           <Button
                             variant="outline"
@@ -221,7 +264,10 @@ export default async function BookingsPage() {
                       <div className="px-6 sm:px-8 pb-8 space-y-8 flex-1">
                         <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-border/50 shadow-sm bg-muted">
                           <Image
-                            src={space?.imageUrls[0] || ""}
+                            src={
+                              space?.imageUrls[0] ||
+                              "https://images.unsplash.com/photo-1497366216548-37526070297c"
+                            }
                             alt={space?.title || "Space Image"}
                             fill
                             unoptimized
@@ -276,7 +322,7 @@ export default async function BookingsPage() {
                             </div>
                             <div>
                               <p className="font-bold text-sm">
-                                Ospitato da {host?.name}
+                                Ospitato da {host?.name || "Host"}
                               </p>
                               <p className="text-xs text-muted-foreground font-medium text-accent">
                                 Host Verificato
@@ -354,7 +400,7 @@ export default async function BookingsPage() {
                   Nessuna prenotazione passata.
                 </p>
               ) : (
-                pastBookings.map((booking) => {
+                pastBookings.map((booking: any) => {
                   const space = booking.space;
                   const day = format(new Date(booking.date), "dd");
 
@@ -374,15 +420,16 @@ export default async function BookingsPage() {
                         </span>
                       </div>
 
-                      <div className="flex-1">
-                        <h4 className="text-lg font-bold">{space?.title}</h4>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          {formatSpaceType(space?.type as SpaceType)} •{" "}
-                          {space?.city}
+                      <div className="flex-1 w-full">
+                        <h4 className="text-lg font-bold truncate">
+                          {space?.title}
+                        </h4>
+                        <p className="text-sm font-medium text-muted-foreground truncate">
+                          {formatSpaceType(space?.type)} • {space?.city}
                         </p>
                       </div>
 
-                      <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
+                      <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0 shrink-0">
                         {(booking.status === "CONFIRMED" ||
                           booking.status === "COMPLETED") && (
                           <Button
@@ -417,24 +464,3 @@ export default async function BookingsPage() {
     </main>
   );
 }
-
-// Funzione helper cn
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
-}
-
-// Funzione helper colori stati
-const getStatusColor = (status: BookingStatus) => {
-  switch (status) {
-    case "CONFIRMED":
-      return "bg-primary/10 text-primary-foreground border-primary/30";
-    case "PENDING":
-      return "bg-amber-500/10 text-amber-700 border-amber-500/30";
-    case "CANCELLED":
-      return "bg-destructive/10 text-destructive border-destructive/30";
-    case "COMPLETED":
-      return "bg-green-500/10 text-green-700 border-green-500/30";
-    default:
-      return "bg-secondary/10 text-foreground border-border/50";
-  }
-};

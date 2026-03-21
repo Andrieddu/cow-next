@@ -49,7 +49,8 @@ export async function updateSession(request: NextRequest) {
   const isProtectedRoute =
     pathname.startsWith("/profile") ||
     pathname.startsWith("/messages") ||
-    pathname.startsWith("/host");
+    pathname.startsWith("/host") ||
+    pathname.startsWith("/checkout");
 
   // Definisci qui le rotte di autenticazione (dove un loggato non dovrebbe stare)
   const isAuthRoute =

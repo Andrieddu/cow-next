@@ -138,6 +138,12 @@ export default function SpaceDetailClient({
   const searchParams = useSearchParams();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
+  // Catturiamo TUTTI i parametri correnti (location, date, ecc) per non perderli tornando indietro
+  const currentParamsString = searchParams.toString();
+  const backToSearchUrl = currentParamsString
+    ? `/search?${currentParamsString}`
+    : "/search";
+
   // --- LOGICA DI LETTURA PARAMETRI URL ---
   const urlStartDate = searchParams.get("startDate");
   const urlEndDate = searchParams.get("endDate");
@@ -205,8 +211,27 @@ export default function SpaceDetailClient({
 
   const handleConfirmBooking = () => {
     setIsModalOpen(false);
-    // TODO: In the future, we will send data to the checkout via URL params or state
-    router.push(`/checkout?spaceId=${space.id}`);
+
+    // Prepariamo i parametri da passare alla pagina di checkout
+    const params = new URLSearchParams();
+    params.set("spaceId", space.id);
+
+    if (date?.from) {
+      params.set("startDate", format(date.from, "yyyy-MM-dd"));
+    }
+    if (date?.to) {
+      params.set("endDate", format(date.to, "yyyy-MM-dd"));
+    }
+
+    params.set("start", startTime);
+    params.set("end", endTime);
+
+    // Aggiungiamo anche altre info utili per il DB
+    params.set("guests", guests.toString());
+    params.set("totalPrice", totalPrice.toString());
+    params.set("isFullDay", isFullDay ? "true" : "false");
+
+    router.push(`/checkout?${params.toString()}`);
   };
 
   const duration = useMemo(() => {
@@ -280,7 +305,7 @@ export default function SpaceDetailClient({
     <main className="min-h-screen bg-background pb-20">
       <div className="container max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
         <Link
-          href="/search"
+          href={backToSearchUrl}
           className="inline-flex items-center text-sm font-bold text-muted-foreground hover:text-accent transition-colors"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Torna alla ricerca
