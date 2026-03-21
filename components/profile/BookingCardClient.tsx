@@ -9,6 +9,7 @@ import { Clock, MapPin, AlertTriangle, Loader2, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sheet,
   SheetContent,
@@ -16,6 +17,7 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetDescription,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Dialog,
@@ -233,7 +235,7 @@ export default function BookingCardClient({ booking }: { booking: any }) {
             </SheetDescription>
           </SheetHeader>
 
-          <div className="px-6 sm:px-8 pb-8 space-y-8 flex-1">
+          <div className="px-6 sm:px-8 pb-8 space-y-8">
             <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-border/50 bg-muted">
               <Image
                 src={space.imageUrls[0]}
@@ -244,6 +246,25 @@ export default function BookingCardClient({ booking }: { booking: any }) {
               />
             </div>
 
+            {/* INFO HOST */}
+            {host && (
+              <div className="flex items-center gap-4 p-4 rounded-2xl border border-border/50 bg-background shadow-sm">
+                <Avatar className="h-12 w-12 border border-border/50 shadow-sm">
+                  <AvatarImage src={host.image || ""} />
+                  <AvatarFallback>{host.name?.charAt(0) || "H"}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">
+                    Il tuo Host
+                  </span>
+                  <span className="font-bold text-foreground text-base leading-tight">
+                    {host.name} {host.surname}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Dettagli Prenotazione */}
             <div className="bg-secondary/5 border border-border/50 rounded-2xl p-6 space-y-6">
               <div className="flex flex-col gap-1">
                 <span className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
@@ -271,49 +292,48 @@ export default function BookingCardClient({ booking }: { booking: any }) {
                 </span>
               </div>
             </div>
-
-            {/* SEZIONE AZIONI SIDEBAR */}
-            <div className="flex flex-col gap-3">
-              {/* RIPRISTINATO: TASTO RICEVUTA */}
-              {(booking.status === "CONFIRMED" ||
-                booking.status === "COMPLETED") && (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
-                  onClick={() =>
-                    toast.info("Generazione ricevuta...", {
-                      description:
-                        "La ricevuta verrà scaricata tra pochi istanti.",
-                    })
-                  }
-                >
-                  <Receipt className="h-5 w-5 text-muted-foreground" /> Scarica
-                  Ricevuta
-                </Button>
-              )}
-
-              <Link href={`/space/${space.id}`} className="w-full">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start h-12 rounded-xl font-bold gap-3 border-border/50"
-                >
-                  <MapPin className="h-5 w-5 text-muted-foreground" /> Rivedi
-                  annuncio
-                </Button>
-              </Link>
-
-              {(booking.status === "CONFIRMED" ||
-                booking.status === "PENDING") && (
-                <Button
-                  onClick={handleStartCancel}
-                  variant="outline"
-                  className="w-full justify-start h-12 rounded-xl font-bold border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive gap-3 mt-4"
-                >
-                  <AlertTriangle className="h-5 w-5" /> Cancella Prenotazione
-                </Button>
-              )}
-            </div>
           </div>
+
+          {/* SEZIONE AZIONI: Ora fa parte del flusso normale e si trova a fondo pagina */}
+          <SheetFooter className="px-6 sm:px-8 pb-8 flex-col sm:flex-col gap-3 sm:space-x-0 mt-auto">
+            {(booking.status === "CONFIRMED" ||
+              booking.status === "COMPLETED") && (
+              <Button
+                variant="outline"
+                className="w-full justify-start h-12 rounded-xl font-bold border-border/50 gap-3 shadow-sm hover:bg-secondary/5"
+                onClick={() =>
+                  toast.info("Generazione ricevuta...", {
+                    description:
+                      "La ricevuta verrà scaricata tra pochi istanti.",
+                  })
+                }
+              >
+                <Receipt className="h-5 w-5 text-muted-foreground" /> Scarica
+                Ricevuta
+              </Button>
+            )}
+
+            <Link href={`/space/${space.id}`} className="w-full">
+              <Button
+                variant="outline"
+                className="w-full justify-start h-12 rounded-xl font-bold gap-3 border-border/50"
+              >
+                <MapPin className="h-5 w-5 text-muted-foreground" /> Rivedi
+                annuncio
+              </Button>
+            </Link>
+
+            {(booking.status === "CONFIRMED" ||
+              booking.status === "PENDING") && (
+              <Button
+                onClick={handleStartCancel}
+                variant="outline"
+                className="w-full justify-start h-12 rounded-xl font-bold border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive gap-3 mt-2"
+              >
+                <AlertTriangle className="h-5 w-5" /> Cancella Prenotazione
+              </Button>
+            )}
+          </SheetFooter>
         </SheetContent>
       </Sheet>
 
@@ -357,7 +377,6 @@ export default function BookingCardClient({ booking }: { booking: any }) {
       ) : (
         <Drawer open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
           <DrawerContent className="rounded-t-[2.5rem] px-6 pb-8">
-            <div className="mx-auto w-12 h-1.5 bg-border rounded-full mt-4 mb-8" />
             <DrawerHeader className="px-0 text-left">
               <DrawerTitle className="text-2xl font-bold text-foreground">
                 Annulla Prenotazione?
