@@ -66,21 +66,66 @@ export async function createSpaceAction(prevState: any, formData: FormData) {
     return { success: false, status: 400, error: firstError };
   }
 
-  // Recuperiamo le amenities (es. checkbox multiple nel form)
+  // Recuperiamo le amenities e gli orari
   const amenities = formData.getAll("amenities") as string[];
-
-  // I giorni arrivano come array di stringhe ["1", "2"], li trasformiamo in array di numeri [1, 2]
   const openDaysRaw = formData.getAll("openDays") as string[];
   const openDays = openDaysRaw.map((day) => parseInt(day, 10));
-
-  // I checkbox/switch HTML mandano "on" se sono attivi
   const instantBooking = formData.get("instantBooking") === "on";
 
   // LEGGIAMO QUALE TASTO È STATO PREMUTO
   const actionType = formData.get("actionType");
   const isActive = actionType === "publish"; // true se premi "Pubblica", false se premi "Bozza"
 
+  // --- 📸 LOGICA UPLOAD IMMAGINI SU SUPABASE ---
+  const rawImageFiles = formData.getAll("images") as File[];
+
+  // Filtriamo file vuoti che alcuni browser potrebbero inviare
+  const validImageFiles = rawImageFiles.filter(
+    (f) => f.size > 0 && f.name !== "undefined",
+  );
+
+  // Controllo Server-Side: devono essere esattamente 5
+  if (validImageFiles.length !== 5) {
+    return {
+      success: false,
+      status: 400,
+      error: "Devi caricare esattamente 5 immagini per il tuo spazio.",
+    };
+  }
+
+  const imageUrls: string[] = [];
+
   try {
+    // Cicliamo e carichiamo i 5 file sul bucket "spaces"
+    for (const file of validImageFiles) {
+      const fileExt = file.name.split(".").pop();
+      // Creiamo un nome file unico: idUtente/stringaRandom_timestamp.estensione
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("spaces") // Assicurati che il bucket si chiami esattamente così
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error("Errore Storage:", uploadError);
+        return {
+          success: false,
+          status: 500,
+          error:
+            "Impossibile caricare alcune immagini. Assicurati che non superino i 2MB e riprova.",
+        };
+      }
+
+      // Recuperiamo l'URL pubblico per salvarlo nel database
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("spaces").getPublicUrl(filePath);
+
+      imageUrls.push(publicUrl);
+    }
+
+    // --- 💾 SALVATAGGIO NEL DATABASE ---
     const newSpace = await SpaceService.createSpace({
       ...validatedFields.data,
       amenities,
@@ -88,18 +133,12 @@ export async function createSpaceAction(prevState: any, formData: FormData) {
       instantBooking,
       isActive,
       hostId: user.id,
-      // Per ora mettiamo un'immagine segnaposto. In futuro la caricheremo su Supabase Storage!
-      imageUrls: [
-        "https://images.unsplash.com/photo-1497366216548-37526070297c",
-        "https://images.unsplash.com/photo-1497366216548-37526070297c",
-        "https://images.unsplash.com/photo-1497366216548-37526070297c",
-        "https://images.unsplash.com/photo-1497366216548-37526070297c",
-        "https://images.unsplash.com/photo-1497366216548-37526070297c",
-      ],
+      imageUrls: imageUrls, // <-- Ora passiamo i link reali di Supabase!
     });
 
-    // Se tutto va bene, ricarichiamo la dashboard
+    // Se tutto va bene, ricarichiamo le cache
     revalidatePath("/host/dashboard");
+    revalidatePath("/host/listing");
 
     // Ritorna l'ID dello spazio appena creato per poter fare il redirect dal Client
     return {
