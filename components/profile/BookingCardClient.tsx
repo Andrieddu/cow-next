@@ -12,11 +12,17 @@ import {
   Loader2,
   Receipt,
   Star,
+  MessageSquareText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+
+// I TUOI COMPONENTI FIELD
+import { Field, FieldLabel } from "@/components/ui/field";
+
 import {
   Sheet,
   SheetContent,
@@ -44,6 +50,9 @@ import {
 } from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { updateBookingStatus } from "@/actions/booking-actions";
+import { createReviewAction } from "@/actions/review-actions";
+// Importazione della futura server action per le recensioni
+// import { createReviewAction } from "@/actions/review-actions";
 
 // --- HELPERS INTERNI ---
 function useMediaQuery(query: string) {
@@ -101,9 +110,18 @@ const getStatusColor = (status: string) => {
 };
 
 export default function BookingCardClient({ booking }: { booking: any }) {
+  // Stati Base
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Stati Recensione
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [reviewError, setReviewError] = useState("");
 
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const space = booking.space;
@@ -115,6 +133,7 @@ export default function BookingCardClient({ booking }: { booking: any }) {
     locale: it,
   });
 
+  // --- AZIONI CANCELLAZIONE ---
   const handleStartCancel = () => {
     setIsSheetOpen(false);
     setTimeout(() => {
@@ -130,6 +149,46 @@ export default function BookingCardClient({ booking }: { booking: any }) {
     if (result.success) {
       setIsCancelModalOpen(false);
       toast.success("Prenotazione annullata");
+    } else {
+      toast.error("Errore", { description: result.error });
+    }
+  };
+
+  // --- AZIONI RECENSIONE ---
+  const handleStartReview = () => {
+    setIsSheetOpen(false);
+    setRating(0);
+    setComment("");
+    setReviewError("");
+    setTimeout(() => {
+      setIsReviewModalOpen(true);
+    }, 300);
+  };
+
+  const handleConfirmReview = async () => {
+    // Validazione
+    if (rating === 0) {
+      setReviewError("Seleziona almeno una stella per continuare.");
+      return;
+    }
+    if (comment.length > 0 && comment.length < 5) {
+      setReviewError("Il commento deve contenere almeno 5 caratteri.");
+      return;
+    }
+
+    setReviewError("");
+    setIsSubmittingReview(true);
+
+    // --- CHIAMATA REALE ALLA SERVER ACTION ---
+    const result = await createReviewAction(booking.id, { rating, comment });
+
+    setIsSubmittingReview(false);
+
+    if (result.success) {
+      setIsReviewModalOpen(false);
+      toast.success("Grazie!", {
+        description: "La tua recensione è stata pubblicata con successo.",
+      });
     } else {
       toast.error("Errore", { description: result.error });
     }
@@ -166,6 +225,103 @@ export default function BookingCardClient({ booking }: { booking: any }) {
           </span>
         </div>
       </div>
+    </div>
+  );
+
+  // --- COMPONENTE INTERNO DEL FORM ---
+  const ReviewFormContent = (
+    <div className="space-y-8 py-6">
+      <div className="bg-secondary/5 border border-border/50 rounded-2xl p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
+        <div className="relative h-14 w-16 rounded-xl overflow-hidden shrink-0 border border-border/50 bg-muted">
+          <Image
+            src={space.imageUrls[0]}
+            alt={space.title}
+            fill
+            unoptimized
+            className="object-cover"
+          />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <h4 className="font-bold truncate text-foreground text-sm">
+            {space.title}
+          </h4>
+          <div className="flex items-center gap-1 mt-0.5 text-muted-foreground">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="text-[11px] font-medium truncate">
+              {space.city}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <Field className="flex flex-col items-center gap-2">
+        <FieldLabel className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80">
+          La tua valutazione
+        </FieldLabel>
+        <div
+          className="flex items-center gap-1"
+          onMouseLeave={() => setHoverRating(0)}
+        >
+          {[1, 2, 3, 4, 5].map((starIndex) => {
+            const isFilled = starIndex <= (hoverRating || rating);
+
+            return (
+              <Button
+                key={starIndex}
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setRating(starIndex)}
+                onMouseEnter={() => setHoverRating(starIndex)}
+                className="h-12 w-12 rounded-full transition-transform hover:scale-125 hover:bg-transparent focus-visible:ring-accent"
+              >
+                <Star
+                  className={cn(
+                    "h-10 w-10 transition-colors",
+                    isFilled
+                      ? "fill-yellow-400 text-yellow-500" // Piena
+                      : "text-muted-foreground/30 hover:text-yellow-400", // Vuota
+                  )}
+                />
+              </Button>
+            );
+          })}
+        </div>
+        {rating > 0 && (
+          <span className="text-sm font-bold text-yellow-600 animate-in fade-in slide-in-from-top-1 mt-1">
+            {rating === 1
+              ? "Pessimo"
+              : rating === 2
+                ? "Scarso"
+                : rating === 3
+                  ? "Nella media"
+                  : rating === 4
+                    ? "Ottimo"
+                    : "Eccellente!"}
+          </span>
+        )}
+      </Field>
+
+      <Field className="space-y-3">
+        <FieldLabel className="flex items-center gap-2 text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80 px-1">
+          <MessageSquareText className="h-4 w-4 text-accent" /> Racconta la tua
+          esperienza
+        </FieldLabel>
+        <Textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Come ti sei trovato? Racconta la tua esperienza agli altri utenti..."
+          rows={4}
+          className="resize-none rounded-xl border-border/50 bg-secondary/5 p-4 font-medium text-sm focus-visible:ring-accent/20"
+        />
+      </Field>
+
+      {/* Mostriamo eventuali errori generati dai nostri check */}
+      {reviewError && (
+        <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-bold text-destructive animate-in fade-in">
+          {reviewError}
+        </div>
+      )}
     </div>
   );
 
@@ -301,20 +457,21 @@ export default function BookingCardClient({ booking }: { booking: any }) {
             </div>
           </div>
 
-          {/* SEZIONE AZIONI: Ora fa parte del flusso normale e si trova a fondo pagina */}
+          {/* SEZIONE AZIONI */}
           <SheetFooter className="px-6 sm:px-8 pb-8 flex-col sm:flex-col gap-3 sm:space-x-0 mt-auto">
             {/* Mostra il pulsante SOLO se la prenotazione è completata E NON ha ancora una recensione */}
             {booking.status === "COMPLETED" && !booking.review && (
               <Button
                 className="w-full justify-start h-12 rounded-xl font-bold gap-3 shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform"
-                onClick={() => toast.info("Modale recensione in arrivo!")}
+                onClick={handleStartReview}
               >
                 <Star className="h-5 w-5 fill-current" /> Lascia un feedback
               </Button>
             )}
+
             {/* Se l'ha già lasciata, mostri un bel messaggio! */}
             {booking.status === "COMPLETED" && booking.review && (
-              <div className="text-sm font-bold text-accent">
+              <div className="text-sm font-bold text-accent bg-accent/10 p-3 rounded-xl border border-accent/20 text-center">
                 Hai recensito questo soggiorno ({booking.review.rating} stelle)
               </div>
             )}
@@ -361,7 +518,7 @@ export default function BookingCardClient({ booking }: { booking: any }) {
         </SheetContent>
       </Sheet>
 
-      {/* MODALE CANCELLAZIONE... (Dialog/Drawer resta invariato) */}
+      {/* MODALE CANCELLAZIONE */}
       {isDesktop ? (
         <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
           <DialogContent className="sm:max-w-[425px] rounded-[2.5rem] p-8">
@@ -434,6 +591,83 @@ export default function BookingCardClient({ booking }: { booking: any }) {
                 className="w-full rounded-xl font-bold text-muted-foreground h-14"
               >
                 Mantieni Prenotazione
+              </Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      )}
+
+      {/* --- MODALE RECENSIONE --- */}
+      {isDesktop ? (
+        <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
+          <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] p-8">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold tracking-tight">
+                La tua opinione conta!
+              </DialogTitle>
+              <DialogDescription className="text-base font-medium">
+                Com è andata la tua esperienza presso {space.title}?
+              </DialogDescription>
+            </DialogHeader>
+
+            {ReviewFormContent}
+
+            <DialogFooter className="flex-col sm:flex-col gap-3">
+              <Button
+                onClick={handleConfirmReview}
+                disabled={isSubmittingReview}
+                className="w-full rounded-xl h-12 font-bold shadow-lg shadow-primary/20 gap-2"
+              >
+                {isSubmittingReview ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  "Pubblica Recensione"
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setIsReviewModalOpen(false)}
+                className="w-full rounded-xl font-bold text-muted-foreground h-12"
+              >
+                Annulla
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <Drawer open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
+          <DrawerContent className="rounded-t-[2.5rem] px-6 pb-8 overflow-y-auto max-h-[90vh]">
+            <DrawerHeader className="px-0 text-left pt-8">
+              <DrawerTitle className="text-3xl font-bold text-foreground tracking-tight">
+                La tua opinione conta!
+              </DrawerTitle>
+              <DrawerDescription className="text-base font-medium">
+                Com è andata la tua esperienza presso {space.title}?
+              </DrawerDescription>
+            </DrawerHeader>
+
+            {ReviewFormContent}
+
+            <DrawerFooter className="px-0 flex-col gap-3 mt-4">
+              <Button
+                onClick={handleConfirmReview}
+                disabled={isSubmittingReview}
+                className="w-full rounded-xl h-14 font-bold shadow-lg shadow-primary/20 gap-2"
+              >
+                {isSubmittingReview ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" /> Invio...
+                  </>
+                ) : (
+                  "Pubblica Recensione"
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setIsReviewModalOpen(false)}
+                className="w-full rounded-xl font-bold text-muted-foreground h-14"
+              >
+                Annulla
               </Button>
             </DrawerFooter>
           </DrawerContent>
