@@ -79,9 +79,12 @@ export default async function ProfilePage() {
                 unoptimized
               />
             </div>
-            <button className="absolute bottom-0 right-0 h-10 w-10 bg-background rounded-full border border-border/50 shadow-sm flex items-center justify-center text-muted-foreground hover:text-accent transition-colors">
+            <Link
+              href="/profile/settings"
+              className="absolute bottom-0 right-0 h-10 w-10 bg-background rounded-full border border-border/50 shadow-sm flex items-center justify-center text-muted-foreground hover:text-accent hover:scale-110 transition-all cursor-pointer"
+            >
               <Edit2 className="h-4 w-4" />
-            </button>
+            </Link>
           </div>
 
           <div className="flex-1 text-center md:text-left pt-2">
