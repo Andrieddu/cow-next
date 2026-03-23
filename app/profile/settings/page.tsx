@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// Rimosso l'import di Switch qui, perché ora lo usa il NotificationForm
-import { Field, FieldLabel, FieldDescription } from "@/components/ui/field";
 import {
   User,
   CreditCard,
@@ -21,6 +18,7 @@ import { UserService } from "@/services/user-service";
 // IMPORTIAMO I NOSTRI COMPONENTI FORM
 import ProfileForm from "@/components/forms/ProfileForm";
 import NotificationForm from "@/components/forms/NotificationForm";
+import UpdatePasswordForm from "@/components/forms/UpdatePasswordForm";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -181,81 +179,23 @@ export default async function SettingsPage() {
                   <NotificationForm user={currentUser as any} />
                 </div>
               </TabsContent>
-
               {/* === SCHEDA SICUREZZA === */}
               <TabsContent
                 value="sicurezza"
                 className="mt-0 focus-visible:outline-none"
               >
-                {/* ... (Contenuto Sicurezza Invariato) ... */}
                 <div className="bg-background rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-border/50">
                   <div className="flex items-center gap-3 mb-8">
-                    <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                      <Lock className="h-5 w-5 text-accent" />
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Lock className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="text-2xl font-bold tracking-tight">
                       Sicurezza
                     </h2>
                   </div>
 
-                  <form className="flex flex-col gap-6 max-w-md">
-                    <Field>
-                      <FieldLabel
-                        htmlFor="current-password"
-                        className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80 px-1"
-                      >
-                        Password Attuale
-                      </FieldLabel>
-                      <Input
-                        id="current-password"
-                        type="password"
-                        placeholder="••••••••"
-                        className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20"
-                      />
-                    </Field>
-
-                    <Field>
-                      <FieldLabel
-                        htmlFor="new-password"
-                        className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80 px-1"
-                      >
-                        Nuova Password
-                      </FieldLabel>
-                      <Input
-                        id="new-password"
-                        type="password"
-                        placeholder="Inserisci nuova password"
-                        className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20"
-                      />
-                      <FieldDescription className="px-1">
-                        Assicurati che sia lunga almeno 8 caratteri.
-                      </FieldDescription>
-                    </Field>
-
-                    <Field>
-                      <FieldLabel
-                        htmlFor="confirm-password"
-                        className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80 px-1"
-                      >
-                        Conferma Nuova Password
-                      </FieldLabel>
-                      <Input
-                        id="confirm-password"
-                        type="password"
-                        placeholder="Ripeti la nuova password"
-                        className="h-12 rounded-xl border-border/50 focus-visible:ring-accent/20"
-                      />
-                    </Field>
-
-                    <div className="pt-2">
-                      <Button
-                        type="button"
-                        className="h-12 w-full md:w-auto px-8 rounded-xl font-bold shadow-lg shadow-accent/20 bg-accent text-accent-foreground hover:bg-accent/90"
-                      >
-                        Aggiorna Password
-                      </Button>
-                    </div>
-                  </form>
+                  {/* ECCO IL NOSTRO COMPONENTE DINAMICO! */}
+                  <UpdatePasswordForm />
                 </div>
               </TabsContent>
             </div>

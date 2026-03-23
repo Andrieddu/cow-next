@@ -69,3 +69,44 @@ export async function logout() {
   revalidatePath("/", "layout");
   redirect("/login");
 }
+
+export async function updatePasswordAction(prevState: any, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, error: "Non sei autorizzato." };
+  }
+
+  const newPassword = formData.get("newPassword") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (newPassword !== confirmPassword) {
+    return { success: false, error: "Le password non coincidono." };
+  }
+
+  if (newPassword.length < 8) {
+    return {
+      success: false,
+      error: "La password deve avere almeno 8 caratteri.",
+    };
+  }
+
+  // Chiamata a Supabase per aggiornare la password!
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    console.error("[Update Password Error]:", error);
+    return {
+      success: false,
+      error: "Impossibile aggiornare la password. Riprova.",
+    };
+  }
+
+  return { success: true, message: "Password aggiornata con successo!" };
+}
