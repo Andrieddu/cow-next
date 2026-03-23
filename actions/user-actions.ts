@@ -27,7 +27,7 @@ export async function updateUserProfileAction(
   // Controllo di sicurezza granitico:
   // 1. Devi essere loggato
   // 2. L'ID che stai cercando di modificare DEVE essere il tuo
-  if (error || !user) {
+  if (error || !user || user.id !== userId) {
     return {
       success: false,
       status: 401,
@@ -58,12 +58,59 @@ export async function updateUserProfileAction(
     };
   }
 
+  // --- GESTIONE IMMAGINE AVATAR SU SUPABASE STORAGE ---
+  let newImageUrl: string | null | undefined = undefined;
+  const avatarFile = formData.get("avatar") as File | null;
+  const removeAvatar = formData.get("removeAvatar") === "true";
+
+  // 1. Se l'utente ha cliccato "Rimuovi"
+  if (removeAvatar) {
+    newImageUrl = null;
+  }
+  // 2. Se c'è un file nuovo (escludendo file vuoti o non definiti)
+  else if (
+    avatarFile &&
+    avatarFile.size > 0 &&
+    avatarFile.name !== "undefined"
+  ) {
+    const fileExt = avatarFile.name.split(".").pop();
+    const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, avatarFile);
+
+    if (uploadError) {
+      console.error("[Avatar Upload Error]:", uploadError);
+      return {
+        success: false,
+        status: 500,
+        error: "Impossibile caricare l'immagine del profilo.",
+      };
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+    newImageUrl = publicUrl;
+  }
+
   // --- ESECUZIONE (Stato 200 o 500) ---
   try {
     const { name, surname, phone } = validatedFields.data;
 
+    // Prepariamo l'oggetto con i dati da aggiornare
+    const updateData: any = { name, surname, phone };
+
+    // Aggiungiamo l'immagine solo se è stata modificata (nuova o rimossa)
+    if (newImageUrl !== undefined) {
+      updateData.image = newImageUrl;
+    }
+
     // Chiamiamo il nostro Service
-    await UserService.updateProfile(userId, { name, surname, phone });
+    await UserService.updateProfile(userId, updateData);
 
     // Diciamo a Next.js di aggiornare i dati sulla pagina del profilo
     revalidatePath("/profile");
@@ -74,6 +121,7 @@ export async function updateUserProfileAction(
       success: true,
       status: 200,
       message: "Profilo aggiornato con successo!",
+      timestamp: Date.now(),
     };
   } catch (error) {
     // Errore critico del database (Stato 500)

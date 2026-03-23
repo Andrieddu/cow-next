@@ -47,7 +47,7 @@ export const UserService = {
    */
   updateProfile: async (
     id: string,
-    data: { name?: string; surname?: string; phone?: string },
+    data: { name?: string; surname?: string; phone?: string; image?: string },
   ) => {
     try {
       return await prisma.user.update({
