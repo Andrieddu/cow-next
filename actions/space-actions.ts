@@ -159,7 +159,31 @@ export async function createSpaceAction(prevState: any, formData: FormData) {
 
 export async function updateSpaceAction(prevState: any, formData: FormData) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, status: 401, error: "Non autorizzato." };
+    }
+
     const spaceId = formData.get("spaceId") as string;
+
+    // Verifica sicurezza: l'host è proprietario?
+    const existingSpace = await prisma.space.findUnique({
+      where: { id: spaceId },
+      select: { hostId: true },
+    });
+
+    if (!existingSpace || existingSpace.hostId !== user.id) {
+      return {
+        success: false,
+        status: 403,
+        error: "Spazio non trovato o accesso negato.",
+      };
+    }
+
     const title = formData.get("title") as string;
     const type = formData.get("type") as any;
     const capacity = parseInt(formData.get("capacity") as string, 10);
@@ -184,6 +208,56 @@ export async function updateSpaceAction(prevState: any, formData: FormData) {
       .map((d) => parseInt(d as string, 10));
     const amenities = formData.getAll("amenities") as string[];
 
+    // --- 📸 GESTIONE IMMAGINI IBRIDA (VECCHIE + NUOVE) ---
+    // getAll("images") ci restituisce un array misto: le vecchie sono stringhe, le nuove sono File
+    const rawImages = formData.getAll("images");
+
+    if (rawImages.length !== 5) {
+      return {
+        success: false,
+        status: 400,
+        error: "Devi avere esattamente 5 immagini.",
+      };
+    }
+
+    const finalImageUrls: string[] = [];
+
+    for (const item of rawImages) {
+      if (typeof item === "string") {
+        // 1. È una vecchia immagine (stringa), manteniamo il link
+        finalImageUrls.push(item);
+      } else if (
+        item instanceof File &&
+        item.size > 0 &&
+        item.name !== "undefined"
+      ) {
+        // 2. È una nuova immagine (File), la carichiamo su Supabase
+        const fileExt = item.name.split(".").pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("spaces")
+          .upload(filePath, item);
+
+        if (uploadError) {
+          console.error("Errore Storage Update:", uploadError);
+          return {
+            success: false,
+            status: 500,
+            error: "Impossibile caricare alcune immagini.",
+          };
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("spaces").getPublicUrl(filePath);
+
+        finalImageUrls.push(publicUrl);
+      }
+    }
+
+    // --- 💾 SALVATAGGIO NEL DATABASE ---
     await prisma.space.update({
       where: { id: spaceId },
       data: {
@@ -201,6 +275,7 @@ export async function updateSpaceAction(prevState: any, formData: FormData) {
         isActive,
         openDays,
         amenities,
+        imageUrls: finalImageUrls, // <-- Array con i link vecchi conservati e i nuovi link generati!
       },
     });
 
