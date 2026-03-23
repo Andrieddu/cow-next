@@ -3,25 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Download, Star } from "lucide-react";
-import { format, isBefore, startOfDay } from "date-fns";
-import { it } from "date-fns/locale";
-
-// 1. IMPORTIAMO SUPABASE E I COMPONENTI REALI
+import { ArrowLeft } from "lucide-react";
+import { isBefore, startOfDay } from "date-fns";
 import { createClient } from "@/utils/supabase/server";
 import { UserService } from "@/services/user-service";
 import BookingCardClient from "@/components/profile/BookingCardClient";
-
-// Helper veloce per le icone/testi delle prenotazioni passate (visto che sono diverse)
-const formatSpaceType = (type: string) => {
-  const types: Record<string, string> = {
-    DESK: "Desk",
-    PRIVATE_OFFICE: "Ufficio Privato",
-    MEETING_ROOM: "Sala Meeting",
-    EVENT_SPACE: "Sala Eventi",
-  };
-  return types[type] || type;
-};
+import PastBookingCardClient from "@/components/profile/PastBookingCardClient";
 
 export default async function BookingsPage() {
   // 2. AUTENTICAZIONE
@@ -134,58 +121,9 @@ export default async function BookingsPage() {
                   Nessuna prenotazione passata.
                 </p>
               ) : (
-                pastBookings.map((booking: any) => {
-                  const space = booking.space;
-                  const day = format(new Date(booking.date), "dd");
-
-                  return (
-                    <div
-                      key={booking.id}
-                      className="bg-background rounded-3xl p-5 shadow-sm border border-border/40 flex flex-col md:flex-row items-start md:items-center gap-6 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all"
-                    >
-                      <div className="bg-muted rounded-xl w-16 h-16 flex flex-col items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-muted-foreground uppercase">
-                          {format(new Date(booking.date), "MMM", {
-                            locale: it,
-                          })}
-                        </span>
-                        <span className="text-xl font-bold text-foreground leading-none mt-1">
-                          {day}
-                        </span>
-                      </div>
-
-                      <div className="flex-1 w-full">
-                        <h4 className="text-lg font-bold truncate">
-                          {space?.title}
-                        </h4>
-                        <p className="text-sm font-medium text-muted-foreground truncate">
-                          {formatSpaceType(space?.type)} • {space?.city}
-                        </p>
-                      </div>
-
-                      <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0 shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 rounded-xl font-bold border-border/50 gap-2 h-10"
-                        >
-                          <Download className="h-4 w-4" /> Ricevuta
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="flex-1 rounded-xl font-bold gap-2 h-10"
-                        >
-                          <Star
-                            className="h-4 w-4 text-primary"
-                            fill="currentColor"
-                          />{" "}
-                          Recensisci
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })
+                pastBookings.map((booking: any) => (
+                  <PastBookingCardClient key={booking.id} booking={booking} />
+                ))
               )}
             </div>
           </TabsContent>
