@@ -5,7 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Clock, MapPin, AlertTriangle, Loader2, Receipt } from "lucide-react";
+import {
+  Clock,
+  MapPin,
+  AlertTriangle,
+  Loader2,
+  Receipt,
+  Star,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -296,6 +303,23 @@ export default function BookingCardClient({ booking }: { booking: any }) {
 
           {/* SEZIONE AZIONI: Ora fa parte del flusso normale e si trova a fondo pagina */}
           <SheetFooter className="px-6 sm:px-8 pb-8 flex-col sm:flex-col gap-3 sm:space-x-0 mt-auto">
+            {/* Mostra il pulsante SOLO se la prenotazione è completata E NON ha ancora una recensione */}
+            {booking.status === "COMPLETED" && !booking.review && (
+              <Button
+                className="w-full justify-start h-12 rounded-xl font-bold gap-3 shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform"
+                onClick={() => toast.info("Modale recensione in arrivo!")}
+              >
+                <Star className="h-5 w-5 fill-current" /> Lascia un feedback
+              </Button>
+            )}
+            {/* Se l'ha già lasciata, mostri un bel messaggio! */}
+            {booking.status === "COMPLETED" && booking.review && (
+              <div className="text-sm font-bold text-accent">
+                Hai recensito questo soggiorno ({booking.review.rating} stelle)
+              </div>
+            )}
+
+            {/* Pulsante Ricevuta */}
             {(booking.status === "CONFIRMED" ||
               booking.status === "COMPLETED") && (
               <Button

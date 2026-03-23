@@ -128,6 +128,7 @@ model Booking {
   status        BookingStatus @default(PENDING)
   payment       Payment?
   conversation  Conversation?
+  review        Review?  // Relazione inversa: una prenotazione può avere (o non avere ancora) una recensione
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
@@ -193,6 +194,8 @@ model Review {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   spaceId       String
   space         Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  bookingId     String   @unique // @unique garantisce 1 sola recensione per ogni prenotazione
+  booking       Booking  @relation(fields: [bookingId], references: [id])
   createdAt     DateTime @default(now())
 }
 
