@@ -1,72 +1,84 @@
-"use client";
-
 import React from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 import {
   ArrowLeft,
   Star,
   Search,
   MessageSquare,
-  ThumbsUp,
   Filter,
   ChevronDown,
 } from "lucide-react";
 
-// Import standard di shadcn e utility
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+// IMPORT DATABASE E AUTH
+import { createClient } from "@/utils/supabase/server";
+import { prisma } from "@/lib/prisma";
 
-// --- DATI MOCKUP RECENSIONI ---
-const reviewsData = [
-  {
-    id: "r1",
-    user: "Marco Rossi",
-    avatar: "https://i.pravatar.cc/150?img=32",
-    rating: 5,
-    date: "12 Marzo 2026",
-    space: "Sala Meeting Galileo",
-    comment:
-      "Spazio incredibile, molto luminoso e con una connessione internet velocissima. L'host è stato super disponibile per il monitor extra richiesto. Torneremo sicuramente!",
-    reply: "Grazie Marco! È stato un piacere ospitarvi.",
-  },
-  {
-    id: "r2",
-    user: "Giulia Bianchi",
-    avatar: "https://i.pravatar.cc/150?img=44",
-    rating: 4,
-    date: "05 Marzo 2026",
-    space: "Flex Desk Centrale",
-    comment:
-      "Ottima posizione, proprio accanto alla stazione. Un po' di rumore la mattina presto, ma per il resto tutto perfetto. Molto pulito.",
-    reply: null,
-  },
-  {
-    id: "r3",
-    user: "Luca Verdi",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    rating: 5,
-    date: "28 Febbraio 2026",
-    space: "Sala Meeting Galileo",
-    comment:
-      "Prenotazione last-minute gestita perfettamente. Lo spazio è molto professionale e i clienti sono rimasti colpiti.",
-    reply: null,
-  },
-];
+export default async function HostReviewsPage() {
+  // 1. AUTENTICAZIONE E SICUREZZA
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default function HostReviewsPage() {
+  if (!user) {
+    redirect("/login");
+  }
+
+  // 2. RECUPERO TUTTE LE RECENSIONI PER GLI SPAZI DI QUESTO HOST
+  // Usiamo Prisma per trovare tutte le recensioni collegate agli spazi dove l'hostId = user.id
+  const reviews = await prisma.review.findMany({
+    where: {
+      space: {
+        hostId: user.id,
+      },
+    },
+    include: {
+      user: true, // Chi ha lasciato la recensione
+      space: true, // Su quale spazio
+    },
+    orderBy: {
+      createdAt: "desc", // Le più recenti prima
+    },
+  });
+
+  // 3. CALCOLO STATISTICHE REALI
+  const totalReviews = reviews.length;
+
+  // Calcolo media generale
+  const averageRating =
+    totalReviews === 0
+      ? 0
+      : reviews.reduce((acc, rev) => acc + rev.rating, 0) / totalReviews;
+
+  // Calcolo distribuzione delle stelle (quante da 5, quante da 4, ecc.)
+  const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  reviews.forEach((rev) => {
+    if (rev.rating >= 1 && rev.rating <= 5) {
+      ratingCounts[rev.rating as keyof typeof ratingCounts]++;
+    }
+  });
+
   return (
     <main className="flex flex-col w-full min-h-screen bg-secondary/5 pb-20">
       {/* 1. HEADER */}
-      <div className="bg-background sticky top-0 z-30">
+      <div className="bg-background sticky top-0 z-30 border-b border-border/50">
         <div className="container max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link href="/host/dashboard">
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full hover:bg-secondary/10"
+              >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
@@ -76,11 +88,13 @@ export default function HostReviewsPage() {
           </div>
           <div className="hidden md:flex items-center gap-2">
             <Badge className="bg-primary/10 text-primary border-none font-bold">
-              4.92 Media
+              {averageRating.toFixed(2)} Media
             </Badge>
-            <Badge className="bg-accent/10 text-accent border-none font-bold">
-              Superhost
-            </Badge>
+            {averageRating >= 4.8 && totalReviews > 5 && (
+              <Badge className="bg-accent/10 text-accent border-none font-bold">
+                Superhost
+              </Badge>
+            )}
           </div>
         </div>
       </div>
@@ -89,61 +103,56 @@ export default function HostReviewsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* COLONNA SINISTRA: RIEPILOGO STATISTICHE */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="bg-background rounded-[2.5rem] p-8 shadow-sm border border-border/50">
+            <div className="bg-background rounded-[2.5rem] p-8 shadow-sm border border-border/50 sticky top-28">
               <div className="text-center mb-8">
                 <h2 className="text-6xl font-extrabold text-foreground mb-2">
-                  4.92
+                  {averageRating.toFixed(1)}
                 </h2>
                 <div className="flex justify-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className="h-5 w-5 text-primary fill-primary"
+                      className={cn(
+                        "h-5 w-5",
+                        i < Math.round(averageRating)
+                          ? "text-primary fill-primary"
+                          : "text-muted-foreground/30",
+                      )}
                     />
                   ))}
                 </div>
                 <p className="text-muted-foreground font-medium">
-                  Valutazione basata su 48 recensioni
+                  Valutazione basata su {totalReviews} recensioni
                 </p>
               </div>
 
+              {/* BARRE DI PROGRESSO REALI */}
               <div className="space-y-4">
-                {[5, 4, 3, 2, 1].map((star) => (
-                  <div key={star} className="flex items-center gap-4">
-                    <span className="text-sm font-bold w-3">{star}</span>
-                    <Progress
-                      value={star === 5 ? 90 : star === 4 ? 8 : 2}
-                      className="h-2 bg-secondary/20"
-                    />
-                  </div>
-                ))}
+                {[5, 4, 3, 2, 1].map((star) => {
+                  const count = ratingCounts[star as keyof typeof ratingCounts];
+                  const percentage =
+                    totalReviews === 0 ? 0 : (count / totalReviews) * 100;
+
+                  return (
+                    <div key={star} className="flex items-center gap-4">
+                      <span className="text-sm font-bold w-3">{star}</span>
+                      <Progress
+                        value={percentage}
+                        className="h-2 bg-secondary/20"
+                      />
+                      <span className="text-xs font-medium text-muted-foreground w-6 text-right">
+                        {count}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
 
-              <Separator className="my-8" />
-
-              <div className="space-y-4">
-                <h4 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">
-                  Sentiment
-                </h4>
-                <div className="flex flex-col gap-3">
-                  <div className="flex justify-between text-sm font-medium">
-                    <span>Pulizia</span>
-                    <span className="font-bold">5.0</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-medium">
-                    <span>Comunicazione</span>
-                    <span className="font-bold">4.9</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-medium">
-                    <span>Check-in</span>
-                    <span className="font-bold">5.0</span>
-                  </div>
-                </div>
-              </div>
+              {/* Rimosso il sentiment hardcoded finché non avrai le metriche separate a DB */}
             </div>
           </div>
 
-          {/* COLONNA DESTRA: LISTA RECENSIONI */}
+          {/* COLONNA DESTRA: LISTA RECENSIONI REALI */}
           <div className="lg:col-span-8 space-y-6">
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <div className="relative flex-1">
@@ -162,96 +171,87 @@ export default function HostReviewsPage() {
               </Button>
             </div>
 
-            <div className="flex flex-col gap-6">
-              {reviewsData.map((review) => (
-                <div
-                  key={review.id}
-                  className="bg-background rounded-[2rem] p-6 md:p-8 shadow-sm border border-border/50 transition-all"
-                >
-                  <div className="flex flex-col md:flex-row justify-between gap-6">
-                    <div className="flex items-start gap-4">
-                      <Avatar className="h-12 w-12 border border-border/50 shadow-sm">
-                        <AvatarImage src={review.avatar} />
-                        <AvatarFallback>{review.user[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h4 className="font-bold text-lg leading-tight">
-                          {review.user}
-                        </h4>
-                        <p className="text-xs font-medium text-muted-foreground mt-1">
-                          {review.date}
-                        </p>
-                        <div className="flex gap-0.5 mt-2">
-                          {[...Array(review.rating)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className="h-3.5 w-3.5 text-primary fill-primary"
-                            />
-                          ))}
+            {totalReviews === 0 ? (
+              <div className="bg-background rounded-[2.5rem] p-12 text-center border-2 border-dashed border-border/50">
+                <Star className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">Nessuna recensione</h3>
+                <p className="text-muted-foreground font-medium">
+                  Quando i tuoi ospiti lasceranno un feedback, apparirà qui.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="bg-background rounded-[2rem] p-6 md:p-8 shadow-sm border border-border/50 transition-all hover:shadow-md"
+                  >
+                    <div className="flex flex-col md:flex-row justify-between gap-6 mb-6">
+                      <div className="flex items-start gap-4">
+                        <Avatar className="h-12 w-12 border border-border/50 shadow-sm">
+                          <AvatarImage src={review.user.image || ""} />
+                          <AvatarFallback>
+                            {review.user.name?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h4 className="font-bold text-lg leading-tight">
+                            {review.user.name} {review.user.surname?.charAt(0)}.
+                          </h4>
+                          <p className="text-xs font-medium text-muted-foreground mt-1 capitalize">
+                            {format(
+                              new Date(review.createdAt),
+                              "dd MMMM yyyy",
+                              { locale: it },
+                            )}
+                          </p>
+                          <div className="flex gap-0.5 mt-2">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={cn(
+                                  "h-3.5 w-3.5",
+                                  i < review.rating
+                                    ? "text-primary fill-primary"
+                                    : "text-muted-foreground/30",
+                                )}
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-left md:text-right">
-                      <Badge
-                        variant="outline"
-                        className="bg-secondary/5 border-border/50 text-[10px] uppercase font-bold tracking-widest"
-                      >
-                        {review.space}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    <p className="text-foreground font-medium leading-relaxed italic">
-                      "{review.comment}"
-                    </p>
-                  </div>
-
-                  <div className="mt-8 pt-6 border-t border-dashed border-border/50">
-                    {review.reply ? (
-                      <div className="bg-accent/5 rounded-2xl p-4 border border-accent/10 ml-0 md:ml-8">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageSquare className="h-3.5 w-3.5 text-accent" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-accent">
-                            La tua risposta
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium text-foreground">
-                          {review.reply}
-                        </p>
+                      <div className="text-left md:text-right">
+                        <Link href={`/space/${review.space.id}`}>
+                          <Badge
+                            variant="outline"
+                            className="bg-secondary/5 border-border/50 text-[10px] uppercase font-bold tracking-widest hover:bg-secondary/10 transition-colors"
+                          >
+                            {review.space.title}
+                          </Badge>
+                        </Link>
                       </div>
-                    ) : (
+                    </div>
+
+                    <div className="mb-6">
+                      <p className="text-foreground font-medium leading-relaxed italic text-sm md:text-base">
+                        {review.comment}
+                      </p>
+                    </div>
+
+                    {/* SEZIONE RISPOSTA (Al momento visiva, da implementare a DB se lo desideri) */}
+                    <div className="pt-6 border-t border-dashed border-border/50">
                       <Button
                         variant="ghost"
-                        className="text-accent font-bold hover:bg-accent/10 gap-2 rounded-xl"
+                        className="text-accent font-bold hover:bg-accent/10 gap-2 rounded-xl h-10 px-4"
                       >
-                        <MessageSquare className="h-4 w-4" /> Rispondi a questa
-                        recensione
+                        <MessageSquare className="h-4 w-4" /> Rispondi
+                        pubblicamente
                       </Button>
-                    )}
+                    </div>
                   </div>
-
-                  <div className="mt-4 flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground gap-2 font-bold hover:text-foreground"
-                    >
-                      <ThumbsUp className="h-4 w-4" /> Utile
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center pt-10">
-              <Button
-                variant="outline"
-                className="rounded-2xl h-14 px-8 font-bold border-border/50 shadow-sm"
-              >
-                Carica altre recensioni
-              </Button>
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

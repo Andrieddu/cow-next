@@ -47,23 +47,22 @@ export default async function HostDashboardPage() {
   const hostSpaces = await HostService.getDashboardData(user.id);
 
   // 3. CALCOLI STATISTICHE SUI DATI REALI
-  // // Appiattiamo tutte le prenotazioni in un unico array e aggiungiamo le info dello spazio
   const hostBookings = hostSpaces.flatMap((space) =>
     space.bookings.map((booking) => ({
       ...booking,
-      space, // Alleghiamo le info dello spazio alla prenotazione
-      guest: booking.user, // Rinominiamo 'user' in 'guest' per chiarezza
+      space,
+      guest: booking.user,
     })),
   );
-  // Guadagni (Somma totalPrice delle prenotazioni CONFIRMED o COMPLETED)
+
   const totalEarnings = hostBookings
     .filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED")
     .reduce((sum, b) => sum + b.totalPrice, 0);
-  // Numero prenotazioni attive/confermate
+
   const totalBookingsCount = hostBookings.filter(
     (b) => b.status !== "CANCELLED",
   ).length;
-  // Media recensioni dell'host
+
   const allReviews = hostSpaces.flatMap((space) => space.reviews);
   const hostAverageRating =
     allReviews.length === 0
@@ -72,9 +71,8 @@ export default async function HostDashboardPage() {
           allReviews.reduce((acc, r) => acc + r.rating, 0) / allReviews.length
         ).toFixed(2);
 
-  // 4. RICERCA LE PRENOTAZIONI REALI 'PENDING'
+  // 4. RICERCA LE PRENOTAZIONI
   const pendingRequests = hostBookings.filter((b) => b.status === "PENDING");
-  // Prossimi arrivi (Confermati, futuri o di oggi, presi i primi 3)
   const upcomingArrivals = hostBookings
     .filter(
       (b) =>
@@ -85,7 +83,6 @@ export default async function HostDashboardPage() {
 
   return (
     <main className="flex flex-col w-full min-h-screen bg-secondary/5 pb-20">
-      {" "}
       {/* 1. HEADER DELLA DASHBOARD */}
       <div className="bg-background border-b border-border/50 sticky top-0 z-30">
         <div className="container max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -108,10 +105,11 @@ export default async function HostDashboardPage() {
           </Link>
         </div>
       </div>
+
       <div className="container max-w-7xl mx-auto px-6 pt-10">
         {/* 2. STATISTICHE MENSILI */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {/* ... Card Guadagni ... */}
+          {/* Card Guadagni */}
           <Link href="/host/earnings" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -133,7 +131,7 @@ export default async function HostDashboardPage() {
             </div>
           </Link>
 
-          {/* ... Card Prenotazioni ... */}
+          {/* Card Prenotazioni */}
           <Link href="/host/bookings" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -155,7 +153,7 @@ export default async function HostDashboardPage() {
             </div>
           </Link>
 
-          {/* ... Card Messaggi ... */}
+          {/* Card Messaggi */}
           <Link href="/messages" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -177,7 +175,7 @@ export default async function HostDashboardPage() {
             </div>
           </Link>
 
-          {/* ... Card Valutazioni ... */}
+          {/* Card Valutazioni */}
           <Link href="/host/reviews" className="block group">
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
@@ -199,9 +197,10 @@ export default async function HostDashboardPage() {
             </div>
           </Link>
         </div>
+
         {/* 3. LAYOUT PRINCIPALE A DUE COLONNE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* COLONNA SINISTRA: Richieste e Attività */}{" "}
+          {/* COLONNA SINISTRA: Richieste e Attività */}
           <div className="lg:col-span-8 space-y-10">
             {/* --- SEZIONE RICHIESTE IN SOSPESO --- */}
             <section>
@@ -301,6 +300,7 @@ export default async function HostDashboardPage() {
               )}
             </section>
           </div>
+
           {/* COLONNA DESTRA: I tuoi Spazi */}
           <div className="lg:col-span-4 space-y-6">
             <div className="flex items-center justify-between mb-2">
@@ -366,6 +366,7 @@ export default async function HostDashboardPage() {
                         </span>
                       </div>
                     </div>
+                    {/* Questo componente presumibilmente è client-side e gestisce il menu a tendina per eliminare/modificare */}
                     <HostSpaceDropdown spaceId={space.id} />
                   </div>
                 ))
