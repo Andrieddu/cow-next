@@ -271,7 +271,7 @@ export default function MessagesClient({
                         <AvatarImage src={chat.avatar} />
                       ) : (
                         <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                          CoW
+                          {chat.name?.charAt(0)}
                         </AvatarFallback>
                       )}
                     </Avatar>
@@ -338,7 +338,7 @@ export default function MessagesClient({
                     <AvatarImage src={activeChat.avatar} />
                   ) : (
                     <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                      CoW
+                      {activeChat.name?.charAt(0)}
                     </AvatarFallback>
                   )}
                 </Avatar>
@@ -430,7 +430,9 @@ export default function MessagesClient({
                         {activeChat.avatar ? (
                           <AvatarImage src={activeChat.avatar} />
                         ) : (
-                          <AvatarFallback>CoW</AvatarFallback>
+                          <AvatarFallback className="text-xs uppercase font-bold text-muted-foreground">
+                            {activeChat.name?.charAt(0)}
+                          </AvatarFallback>
                         )}
                       </Avatar>
                     )}
