@@ -74,6 +74,7 @@ export default async function MessagesServerPage() {
           hour: "2-digit",
           minute: "2-digit",
         }),
+        isRead: msg.read,
       })),
     };
   });

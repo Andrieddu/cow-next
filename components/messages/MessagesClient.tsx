@@ -13,6 +13,7 @@ import {
   Send,
   Paperclip,
   MoreVertical,
+  Check,
   CheckCheck,
   Calendar as CalendarIcon,
   Phone,
@@ -30,6 +31,7 @@ type ChatMessage = {
   text: string;
   sender: "me" | "them";
   time: string;
+  isRead?: boolean;
 };
 
 type Chat = {
@@ -156,6 +158,7 @@ export default function MessagesClient({
         hour: "2-digit",
         minute: "2-digit",
       }),
+      isRead: false,
     };
 
     setChats((prevChats) =>
@@ -455,7 +458,12 @@ export default function MessagesClient({
                         )}
                       >
                         {isMe && msg.time}
-                        {isMe && <CheckCheck className="h-3 w-3 text-accent" />}
+                        {isMe &&
+                          (msg.isRead ? (
+                            <CheckCheck className="h-3 w-3 text-accent" /> // Doppia spunta (letta)
+                          ) : (
+                            <Check className="h-3 w-3 text-muted-foreground" /> // Singola spunta (inviata)
+                          ))}
                         {!isMe && msg.time}
                       </span>
                     </div>
