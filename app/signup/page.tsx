@@ -62,22 +62,22 @@ export default async function SignupPage(props: {
               {/* Nome e Cognome */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel htmlFor="nome">Nome</FieldLabel>
-                  {/* Aggiunto name="nome" e required */}
+                  <FieldLabel htmlFor="name">Nome</FieldLabel>
+                  {/* Aggiunto name="name" e required */}
                   <Input
-                    id="nome"
-                    name="nome"
+                    id="name"
+                    name="name"
                     placeholder="Mario"
                     required
                     className="h-12 rounded-xl"
                   />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="cognome">Cognome</FieldLabel>
-                  {/* Aggiunto name="cognome" e required */}
+                  <FieldLabel htmlFor="surname">Cognome</FieldLabel>
+                  {/* Aggiunto name="surname" e required */}
                   <Input
-                    id="cognome"
-                    name="cognome"
+                    id="surname"
+                    name="surname"
                     placeholder="Rossi"
                     required
                     className="h-12 rounded-xl"

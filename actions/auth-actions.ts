@@ -33,8 +33,8 @@ export async function signup(formData: FormData) {
   // Estraiamo TUTTI i campi dal form, inclusi nome e cognome
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const nome = formData.get("nome") as string;
-  const cognome = formData.get("cognome") as string;
+  const name = formData.get("name") as string;
+  const surname = formData.get("surname") as string;
 
   // Registra l'utente in Supabase i metadati (options.data)
   const { error } = await supabase.auth.signUp({
@@ -42,8 +42,8 @@ export async function signup(formData: FormData) {
     password,
     options: {
       data: {
-        nome,
-        cognome,
+        name,
+        surname,
       },
     },
   });

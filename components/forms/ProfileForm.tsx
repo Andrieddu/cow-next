@@ -160,13 +160,13 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Field>
           <FieldLabel
-            htmlFor="nome"
+            htmlFor="name"
             className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80 px-1"
           >
             Nome
           </FieldLabel>
           <Input
-            id="nome"
+            id="name"
             name="name"
             type="text"
             defaultValue={user.name || ""}
@@ -176,13 +176,13 @@ export default function ProfileForm({ user }: ProfileFormProps) {
 
         <Field>
           <FieldLabel
-            htmlFor="cognome"
+            htmlFor="surname"
             className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground/80 px-1"
           >
             Cognome
           </FieldLabel>
           <Input
-            id="cognome"
+            id="surname"
             name="surname"
             type="text"
             defaultValue={user.surname || ""}
