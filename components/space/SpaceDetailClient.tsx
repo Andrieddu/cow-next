@@ -467,56 +467,22 @@ export default function SpaceDetailClient({
 
             <div className="space-y-6">
               <h3 className="text-xl font-bold">Dove ti troverai</h3>
-              <div className="relative w-full h-[350px] rounded-[2.5rem] overflow-hidden border border-border/50 group shadow-inner bg-secondary/20">
-                <Image
-                  unoptimized
-                  src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80"
-                  alt="Mappa position"
-                  fill
-                  className="object-cover opacity-80 mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="relative flex items-center justify-center">
-                    <div className="absolute h-16 w-16 bg-accent/20 rounded-full animate-ping" />
-                    <div className="bg-accent p-3 rounded-full shadow-2xl border-2 border-white">
-                      <Compass className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute bottom-6 left-6">
-                  <div className="bg-background/90 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-border/50 flex items-center gap-4">
-                    <div className="p-2 bg-secondary/10 rounded-lg">
-                      <Navigation className="h-5 w-5 text-accent" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-foreground">
-                        Indicazioni Stradali
-                      </span>
-                      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
-                        5 min dalla Metro
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                <div className="flex flex-col gap-2 p-5 bg-secondary/5 rounded-2xl border border-border/50">
-                  <span className="text-xs font-bold uppercase tracking-widest text-accent">
-                    Il quartiere
-                  </span>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Distretto tecnologico e vibrante, pieno di bar e aree verdi
-                    a pochi passi.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 p-5 bg-secondary/5 rounded-2xl border border-border/50">
-                  <span className="text-xs font-bold uppercase tracking-widest text-accent">
-                    Come arrivare
-                  </span>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Metro M2 e M3 raggiungibili in pochi minuti.
-                  </p>
-                </div>
+
+              {/* Contenitore Mappa */}
+              <div className="relative w-full h-[350px] rounded-sm overflow-hidden border border-border/50 shadow-inner bg-secondary/20">
+                {/* L'Iframe magico di Google Maps */}
+                <iframe
+                  title={`Mappa per ${space.title}`}
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  style={{ border: 0 }}
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(`${space.address}, ${space.city}`)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="absolute inset-0 grayscale-[30%] contrast-125 transition-all duration-500 hover:grayscale-0"
+                ></iframe>
               </div>
             </div>
           </div>
