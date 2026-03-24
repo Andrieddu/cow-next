@@ -23,8 +23,6 @@ import {
   Calendar as CalendarIcon,
   ChevronRight,
   Clock,
-  Compass,
-  Navigation,
   Monitor,
   CheckCircle,
   Loader2,
