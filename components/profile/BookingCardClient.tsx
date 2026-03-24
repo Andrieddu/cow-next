@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -13,6 +14,7 @@ import {
   Receipt,
   Star,
   MessageSquareText,
+  MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -51,6 +53,7 @@ import {
 import { toast } from "sonner";
 import { updateBookingStatus } from "@/actions/booking-actions";
 import { createReviewAction } from "@/actions/review-actions";
+import { getOrCreateConversationAction } from "@/actions/message-actions";
 // Importazione della futura server action per le recensioni
 // import { createReviewAction } from "@/actions/review-actions";
 
@@ -114,6 +117,33 @@ export default function BookingCardClient({ booking }: { booking: any }) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const router = useRouter();
+  const [isStartingChat, setIsStartingChat] = useState(false);
+
+  // La funzione che si attiva al click sul messaggio
+  const handleContactHost = async () => {
+    if (!host) return;
+    setIsStartingChat(true);
+
+    try {
+      // Chiama la nostra action per trovare o creare la chat
+      const conversationId = await getOrCreateConversationAction(
+        host.id,
+        booking.id,
+      );
+
+      // Una volta creata, chiudiamo la modale
+      setIsSheetOpen(false);
+
+      // Invece del generico router.push("/messages"), passiamo l'ID
+      router.push(`/messages?chat=${conversationId}`);
+    } catch (error) {
+      console.error("Errore nell'avvio della chat:", error);
+      toast.error("Errore nell'avvio della chat");
+      setIsStartingChat(false); // Ricordati di sbloccare il bottone se fallisce!
+    }
+  };
 
   // Stati Recensione
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -411,19 +441,39 @@ export default function BookingCardClient({ booking }: { booking: any }) {
 
             {/* INFO HOST */}
             {host && (
-              <div className="flex items-center gap-4 p-4 rounded-2xl border border-border/50 bg-background shadow-sm">
-                <Avatar className="h-12 w-12 border border-border/50 shadow-sm">
-                  <AvatarImage src={host.image || ""} />
-                  <AvatarFallback>{host.name?.charAt(0) || "H"}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">
-                    Il tuo Host
-                  </span>
-                  <span className="font-bold text-foreground text-base leading-tight">
-                    {host.name} {host.surname}
-                  </span>
+              <div className="flex items-center justify-between p-4 rounded-2xl border border-border/50 bg-background shadow-sm">
+                {/* Dati Host (Avatar + Nome) */}
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-12 w-12 border border-border/50 shadow-sm">
+                    <AvatarImage src={host.image || ""} />
+                    <AvatarFallback>
+                      {host.name?.charAt(0) || "H"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">
+                      Il tuo Host
+                    </span>
+                    <span className="font-bold text-foreground text-base leading-tight">
+                      {host.name} {host.surname}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Pulsante Messaggio */}
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  disabled={isStartingChat}
+                  onClick={handleContactHost}
+                  className="rounded-full h-11 w-11 text-accent bg-accent/10 hover:bg-accent/20 border border-accent/20 shrink-0 transition-transform hover:scale-105"
+                >
+                  {isStartingChat ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <MessageCircle className="h-5 w-5" />
+                  )}
+                </Button>
               </div>
             )}
 

@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { MapPin, MessageSquare, ArrowRight, User } from "lucide-react";
+import { MapPin, ArrowRight, User, Loader2, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sheet,
@@ -18,9 +20,12 @@ import {
   SheetTrigger,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { getOrCreateConversationAction } from "@/actions/message-actions";
 
 export default function HostBookingCard({ arrival }: { arrival: any }) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isStartingChat, setIsStartingChat] = useState(false);
+  const router = useRouter();
   const space = arrival.space;
   const guest = arrival.guest;
 
@@ -30,6 +35,28 @@ export default function HostBookingCard({ arrival }: { arrival: any }) {
     locale: it,
   });
 
+  // La funzione che si attiva al click sul messaggio
+  const handleContactGuest = async () => {
+    if (!guest) return;
+    setIsStartingChat(true);
+
+    try {
+      // Passiamo l'ID del guest e l'ID della prenotazione
+      const conversationId = await getOrCreateConversationAction(
+        guest.id,
+        arrival.id,
+      );
+
+      // Chiudiamo la modale
+      setIsSheetOpen(false);
+
+      // Invece di usare un push generico, passiamo l'ID come parametro!
+      router.push(`/messages?chat=${conversationId}`);
+    } catch (error) {
+      toast.error("Errore", { description: "Impossibile avviare la chat." });
+      setIsStartingChat(false);
+    }
+  };
   return (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       {/* CARD ORIZZONTALE (Dashboard) */}
@@ -126,30 +153,38 @@ export default function HostBookingCard({ arrival }: { arrival: any }) {
             </div>
           </div>
 
-          {/* Info sul Guest (Sostituisce l'info sull'Host del profilo) */}
+          {/* Info sul Guest */}
           <div className="flex items-center justify-between border-y border-border/50 py-6">
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14 border border-border/50 shadow-sm">
                 <AvatarImage src={guest?.image || ""} />
                 <AvatarFallback className="bg-accent/10 text-accent font-bold">
-                  {guest?.name?.charAt(0)}
+                  {guest?.name?.charAt(0) || "G"}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <p className="font-bold text-base">
+              <div className="flex flex-col">
+                <p className="font-bold text-base leading-tight">
                   {guest?.name} {guest?.surname}
                 </p>
-                <p className="text-xs text-muted-foreground font-medium truncate max-w-[150px]">
+                <p className="text-[11px] text-muted-foreground font-medium truncate max-w-[150px] mt-0.5">
                   {guest?.email}
                 </p>
               </div>
             </div>
+
+            {/* NUOVO PULSANTE MESSAGGIO */}
             <Button
-              variant="ghost"
+              variant="secondary"
               size="icon"
-              className="rounded-full bg-accent/10 hover:bg-accent/20 text-accent"
+              disabled={isStartingChat}
+              onClick={handleContactGuest}
+              className="rounded-full h-11 w-11 text-accent bg-accent/10 hover:bg-accent/20 border border-accent/20 shrink-0 transition-transform hover:scale-105"
             >
-              <MessageSquare className="h-5 w-5" />
+              {isStartingChat ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <MessageCircle className="h-5 w-5" />
+              )}
             </Button>
           </div>
 

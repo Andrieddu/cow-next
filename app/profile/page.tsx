@@ -1,25 +1,16 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import {
-  Mail,
-  Phone,
-  Calendar,
-  MapPin,
-  Settings,
-  Edit2,
-  LogOut,
-  MessageSquare,
-} from "lucide-react";
+import { Mail, Phone, Calendar } from "lucide-react";
 import BookingCardClient from "@/components/profile/BookingCardClient";
+import { prisma } from "@/lib/prisma";
 
 // 1. IMPORTIAMO SUPABASE E IL REDIRECT
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { logout } from "@/actions/auth-actions";
 
 import { UserService } from "@/services/user-service";
+import ProfileHeader from "@/components/profile/ProfileHeader";
 
 export default async function ProfilePage() {
   // 2. RECUPERO UTENTE LOGGATO
@@ -36,6 +27,17 @@ export default async function ProfilePage() {
 
   // 4. RECUPERO DATI DAL DB TRAMITE L'ID DI SUPABASE
   const currentUser = await UserService.getProfileWithBookings(user.id);
+
+  // Conta i messaggi non letti
+  const unreadMessagesCount = await prisma.message.count({
+    where: {
+      conversation: {
+        participants: { some: { id: user.id } },
+      },
+      senderId: { not: user.id },
+      read: false,
+    },
+  });
 
   // --- LOGICA DINAMICA PER IL TASTO HOST ---
   const isHost = currentUser?.role === "HOST" || currentUser?.role === "ADMIN";
@@ -62,83 +64,13 @@ export default async function ProfilePage() {
   return (
     <main className="flex flex-col w-full min-h-[calc(100vh-80px)] bg-secondary/5 pb-20">
       <div className="container max-w-7xl mx-auto px-6 pt-12 md:pt-16">
-        {/* =========================================
-            1. HEADER PROFILO (Dati Utente Dinamici)
-            ========================================= */}
-        <div className="bg-background rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-border/50 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden mb-12">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3" />
-
-          <div className="relative shrink-0">
-            <div className="h-32 w-32 rounded-full border-4 border-background shadow-xl overflow-hidden bg-secondary/20 flex items-center justify-center">
-              <Image
-                src={currentUser.image || "https://github.com/shadcn.png"}
-                alt={`${currentUser.name || "Utente"} ${currentUser.surname || ""}`}
-                width={128}
-                height={128}
-                className="object-cover"
-                unoptimized
-              />
-            </div>
-            <Link
-              href="/profile/settings"
-              className="absolute bottom-0 right-0 h-10 w-10 bg-background rounded-full border border-border/50 shadow-sm flex items-center justify-center text-muted-foreground hover:text-accent hover:scale-110 transition-all cursor-pointer"
-            >
-              <Edit2 className="h-4 w-4" />
-            </Link>
-          </div>
-
-          <div className="flex-1 text-center md:text-left pt-2">
-            <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold text-primary-foreground uppercase tracking-widest mb-3">
-              {currentUser.role === "ADMIN"
-                ? "Amministratore"
-                : currentUser.role === "HOST"
-                  ? "Host Verificato"
-                  : "Membro Base"}
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2">
-              {currentUser.name} {currentUser.surname}
-            </h1>
-            <p className="text-muted-foreground font-medium flex items-center justify-center md:justify-start gap-2">
-              <MapPin className="h-4 w-4 opacity-70" /> Milano, Italia
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 w-full md:w-64 mt-4 md:mt-0">
-            <Link href={hostButtonLink} className="w-full">
-              <Button className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
-                {hostButtonText}
-              </Button>
-            </Link>
-            <Link href="/messages" className="w-full">
-              <Button
-                variant="outline"
-                className="w-full h-12 rounded-xl font-bold border-border/50 hover:bg-secondary/10 hover:text-accent transition-all flex items-center justify-center gap-2"
-              >
-                <MessageSquare className="h-5 w-5 text-accent" /> Messaggi
-              </Button>
-            </Link>
-            <Link href="/profile/settings" className="w-full">
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full h-12 rounded-xl font-bold border-border/50 hover:bg-secondary/10 hover:text-accent hover:border-accent/30 transition-all flex items-center justify-center gap-2"
-              >
-                <Settings className="h-5 w-5 text-accent" /> Impostazioni
-              </Button>
-            </Link>
-            {/* AGGIUNTO IL FORM PER IL LOGOUT REALE */}
-            <form action={logout} className="w-full">
-              <Button
-                type="submit"
-                variant="outline"
-                size="lg"
-                className="w-full h-12 rounded-xl font-bold border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all flex items-center justify-center gap-2"
-              >
-                <LogOut className="h-5 w-5" /> Esci
-              </Button>
-            </form>
-          </div>
-        </div>
+        {/* === HEADER COMPONENTE === */}
+        <ProfileHeader
+          currentUser={currentUser}
+          initialUnreadCount={unreadMessagesCount}
+          hostButtonText={hostButtonText}
+          hostButtonLink={hostButtonLink}
+        />
 
         {/* =========================================
             2. GRIGLIA CONTENUTI

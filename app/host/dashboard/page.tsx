@@ -4,6 +4,7 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import {
   TrendingUp,
   Calendar as CalendarIcon,
@@ -26,6 +27,7 @@ import HostSpaceDropdown from "@/components/host/HostSpaceDropdown";
 import { createClient } from "@/utils/supabase/server";
 import { HostService } from "@/services/host-service";
 import { UserService } from "@/services/user-service";
+import { cn } from "@/lib/utils";
 
 export default async function HostDashboardPage() {
   // 1. AUTENTICAZIONE
@@ -45,6 +47,23 @@ export default async function HostDashboardPage() {
 
   // 2. RECUPERO DATI REALI DAL DATABASE
   const hostSpaces = await HostService.getDashboardData(user.id);
+
+  const unreadMessagesCount = await prisma.message.count({
+    where: {
+      // 1. Messaggi nelle conversazioni in cui partecipo
+      conversation: {
+        participants: {
+          some: { id: user.id },
+        },
+      },
+      // 2. Messaggi che NON ho inviato io
+      senderId: {
+        not: user.id,
+      },
+      // 3. Messaggi non ancora letti
+      read: false,
+    },
+  });
 
   // 3. CALCOLI STATISTICHE SUI DATI REALI
   const hostBookings = hostSpaces.flatMap((space) =>
@@ -158,18 +177,24 @@ export default async function HostDashboardPage() {
             <div className="bg-background rounded-[2rem] p-6 shadow-sm border border-border/50 flex flex-col gap-4 group-hover:border-accent/30 group-hover:shadow-md transition-all h-full">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                  Messaggi
+                  Nuovi Messaggi
                 </span>
-                <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-                  <MessageSquare className="h-5 w-5 text-blue-500" />
+                <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                  <MessageSquare className="h-5 w-5 text-accent" />
                 </div>
               </div>
               <div>
-                <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
-                  0
+                <h2
+                  className={cn(
+                    "text-3xl font-extrabold tracking-tight",
+                    unreadMessagesCount > 0 ? "text-accent" : "text-foreground",
+                  )}
+                >
+                  {unreadMessagesCount}
                 </h2>
                 <p className="text-sm font-medium text-muted-foreground mt-1 flex items-center gap-1">
-                  Vai alla posta <ArrowRight className="h-3 w-3" />
+                  {unreadMessagesCount > 0 ? "Rispondi ora" : "Vai alla posta"}{" "}
+                  <ArrowRight className="h-3 w-3" />
                 </p>
               </div>
             </div>
