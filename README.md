@@ -17,7 +17,8 @@ The project follows an automated CI/CD pipeline:
 
 1. **Quality Check:** Every Pull Request is automatically verified for TypeScript errors and security vulnerabilities.
 2. **Versioning:** Releases and changelogs are managed via Release Drafter (SemVer).
-3. **Environments:** - `master`: Preview Environment (Pre-production).
+3. **Environments:** 
+   - `master`: Preview Environment (Pre-production).
    - `production`: Live Environment (Production).
 
 ## 💻 Local Development
