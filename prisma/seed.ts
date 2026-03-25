@@ -178,6 +178,7 @@ async function main() {
         "Spazio fantastico e host super disponibile. Vista mozzafiato, il monitor era perfetto!",
       userId: guest.id,
       spaceId: space.id,
+      bookingId: booking.id,
     },
   });
 
