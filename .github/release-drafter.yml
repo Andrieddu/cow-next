@@ -1,0 +1,74 @@
+name-template: "v$RESOLVED_VERSION	"
+tag-template: "v$RESOLVED_VERSION"
+template: |
+  # What's Changed
+
+  $CHANGES
+
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
+
+version-resolver:
+  major:
+    labels:
+      - "breaking-change"
+  minor:
+    labels:
+      - "enhancement"
+  patch:
+    labels:
+      - "bug"
+      - "maintenance"
+      - "configuration"
+      - "documentation"
+      - "ci"
+      - "dependencies"
+      - "security"
+
+categories:
+  - title: "🚨 Breaking changes"
+    labels:
+      - "breaking-change"
+  - title: "🚀 Features"
+    labels:
+      - "enhancement"
+  - title: "🐛 Bug Fixes"
+    labels:
+      - "bug"
+  - title: "🏭 Libraries update"
+    labels:
+      - "dependencies"
+  - title: "🧰 Meta"
+    labels:
+      - "configuration"
+      - "ci"
+      - "documentation"
+exclude-labels:
+  - "skip-changelog"
+replacers:
+  - search: '/(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([\w-]*\))*:\s*(.*)/g'
+    replace: "$3"
+autolabeler:
+  - label: "configuration"
+    title:
+      - '/^(style|refactor|perf|test)(\([\w-]*\))*:\s*.*/i'
+  - label: "security"
+    title:
+      - '/^(build\(security\)):\s*.*/i'
+  - label: "ci"
+    files:
+      - '.*(workflows|github).*\.yaml$'
+    title:
+      - '/^(ci)(\([\w-]*\))*:\s*.*/i'
+  - label: "dependencies"
+    title:
+      - '/^(build\(deps.*\)):\s*.*/i'
+      - '/^chore\(deps.*\):.*/i'
+  - label: "bug"
+    title:
+      - '/^(fix|revert)(\([\w-]*\))*:\s*.*/i'
+  - label: "enhancement"
+    title:
+      - '/^(feature|feat)(\([\w-]*\))*:\s*.+/i'
+  - label: "breaking-change"
+    title:
+      - '/^(breaking-change)(\([\w-]*\))*:\s*.+/i'
