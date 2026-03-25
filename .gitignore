@@ -24,6 +24,8 @@
 .DS_Store
 *.pem
 .idea
+.vscode
+*.log
 
 # debug
 npm-debug.log*
