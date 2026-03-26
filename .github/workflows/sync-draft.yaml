@@ -55,7 +55,7 @@ jobs:
 
       - name: Bump package.json version
         if: steps.get_draft.outputs.skip == 'false'
-        run: npm version ${{ steps.get_draft.outputs.version }} --no-git-tag-version
+        run: npm version ${{ steps.get_draft.outputs.version }} --no-git-tag-version --allow-same-version
 
       - name: Commit and Push to Master
         if: steps.get_draft.outputs.skip == 'false'

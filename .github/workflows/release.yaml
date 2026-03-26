@@ -33,7 +33,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump package.json version
-        run: npm version ${{ github.ref_name }} --no-git-tag-version
+        run: npm version ${{ github.ref_name }} --no-git-tag-version --allow-same-version
 
       - name: Commit to master
         run: |
