@@ -62,7 +62,7 @@ autolabeler:
   - label: "dependencies"
     title:
       - '/^(build\(deps.*\)):\s*.*/i'
-      - '/^chore\(deps.*\):.*/i'
+      - '/^(chore\(deps.*\)):\s*.*/i'
   - label: "bug"
     title:
       - '/^(fix|revert)(\([\w-]*\))*:\s*.*/i'
