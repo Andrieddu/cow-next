@@ -35,7 +35,7 @@ jobs:
       - name: Bump package.json version
         run: npm version ${{ github.ref_name }} --no-git-tag-version --allow-same-version
 
-      - name: Commit to master
+      - name: Commit and push to master
         run: |
           if [[ -n $(git status --porcelain) ]]; then
             git commit -am "chore(release): bump version to ${{ github.ref_name }} [skip ci]"

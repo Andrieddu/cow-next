@@ -60,5 +60,9 @@ jobs:
       - name: Commit and Push to Master
         if: steps.get_draft.outputs.skip == 'false'
         run: |
-          git commit -am "chore: sync version to draft ${{ steps.get_draft.outputs.version }} [skip ci]"
-          git push origin master
+          if [[ -n $(git status --porcelain) ]]; then
+            git commit -am "chore: sync version to draft ${{ steps.get_draft.outputs.version }} [skip ci]"
+            git push origin master
+          else
+            echo "No changes: package.json is already updated to the draft version ${{ steps.get_draft.outputs.version }}"
+          fi
