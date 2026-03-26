@@ -1,4 +1,4 @@
-# 🐮 CoW - Coworking App
+# CoW - Coworking App
 
 Welcome to **CoW**, an MVP for coworking space management and booking.
 This project is built on a professional infrastructure designed to ensure scalability and security.
