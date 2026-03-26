@@ -1,0 +1,64 @@
+name: Sync Draft Version
+
+env:
+  NODE_VERSION: 24.14
+
+on:
+  workflow_run:
+    workflows: ["Release Drafter"]
+    types:
+      - completed
+    branches:
+      - master
+
+jobs:
+  draft_bump:
+    name: Sync Version with Draft Release
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.BOT_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Git Bot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch Draft Release Version
+        id: get_draft
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          # Cerca l'ultima release in stato "Draft"
+          DRAFT_TAG=$(gh release list --json tagName,isDraft -q '.[] | select(.isDraft) | .tagName' | head -n 1)
+
+          if [ -z "$DRAFT_TAG" ]; then
+            echo "Nessuna Draft Release trovata. Salto l'aggiornamento della versione."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Trovata Draft Release: $DRAFT_TAG"
+            VERSION=${DRAFT_TAG#v} # Rimuove la 'v' iniziale
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump package.json version
+        if: steps.get_draft.outputs.skip == 'false'
+        run: npm version ${{ steps.get_draft.outputs.version }} --no-git-tag-version
+
+      - name: Commit and Push to Master
+        if: steps.get_draft.outputs.skip == 'false'
+        run: |
+          git commit -am "chore: sync version to draft ${{ steps.get_draft.outputs.version }} [skip ci]"
+          git push origin master
