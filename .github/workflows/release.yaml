@@ -37,8 +37,12 @@ jobs:
 
       - name: Commit to master
         run: |
-          git commit -am "chore(release): bump version to ${{ github.ref_name }} [skip ci]"
-          git push origin master
+          if [[ -n $(git status --porcelain) ]]; then
+            git commit -am "chore(release): bump version to ${{ github.ref_name }} [skip ci]"
+            git push origin master
+          else
+            echo "No changes: package.json already aligned with the release"
+          fi
 
       - name: Deploy to production (sync master to production branch)
         run: git push origin master:production --force
