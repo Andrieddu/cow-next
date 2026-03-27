@@ -290,7 +290,7 @@ export type SpaceGroupByOutputType = {
   _max: SpaceMaxAggregateOutputType | null
 }
 
-type GetSpaceGroupByPayload<T extends SpaceGroupByArgs> = Prisma.PrismaPromise<
+export type GetSpaceGroupByPayload<T extends SpaceGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<SpaceGroupByOutputType, T['by']> &
       {

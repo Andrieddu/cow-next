@@ -9,6 +9,7 @@ const eslintConfig = defineConfig([
     rules: {
       // Disabilita l'errore/warning per l'uso esplicito di "any"
       "@typescript-eslint/no-explicit-any": "off",
+      "react/no-unescaped-entities": "off",
     },
   },
   // Override default ignores of eslint-config-next.
