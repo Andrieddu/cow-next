@@ -220,7 +220,7 @@ export type PayoutGroupByOutputType = {
   _max: PayoutMaxAggregateOutputType | null
 }
 
-type GetPayoutGroupByPayload<T extends PayoutGroupByArgs> = Prisma.PrismaPromise<
+export type GetPayoutGroupByPayload<T extends PayoutGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<PayoutGroupByOutputType, T['by']> &
       {

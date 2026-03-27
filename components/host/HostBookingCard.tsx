@@ -53,6 +53,7 @@ export default function HostBookingCard({ arrival }: { arrival: any }) {
       // Invece di usare un push generico, passiamo l'ID come parametro!
       router.push(`/messages?chat=${conversationId}`);
     } catch (error) {
+      console.error("Errore avviando chat:", error);
       toast.error("Errore", { description: "Impossibile avviare la chat." });
       setIsStartingChat(false);
     }
@@ -214,7 +215,7 @@ export default function HostBookingCard({ arrival }: { arrival: any }) {
 }
 
 // Piccolo componente Badge locale per evitare errori se non importato
-function Badge({ children, className, variant }: any) {
+function Badge({ children, className }: any) {
   return (
     <span
       className={cn(
