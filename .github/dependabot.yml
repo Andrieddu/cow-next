@@ -1,0 +1,39 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+registries:
+  github-dktunited:
+    type: git
+    url: https://github.com
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 15
+    groups:
+      # Patch updates for production dependencies (grouped)
+      patch-prod:
+        applies-to: version-updates
+        dependency-type: "production"
+        update-types:
+          - "patch"
+      # Patch updates for development dependencies (grouped)
+      patch-dev:
+        applies-to: version-updates
+        dependency-type: "development"
+        update-types:
+          - "patch"
+      # Minor updates for development dependencies (grouped)
+      minor-dev:
+        applies-to: version-updates
+        dependency-type: "development"
+        update-types:
+          - "minor"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
