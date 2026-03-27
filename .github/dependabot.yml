@@ -4,10 +4,6 @@
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
-registries:
-  github-dktunited:
-    type: git
-    url: https://github.com
 updates:
   - package-ecosystem: "npm"
     directory: "/"
