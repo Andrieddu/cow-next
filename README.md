@@ -1,3 +1,5 @@
+<img width="4579" height="1750" alt="cow logo" src="https://github.com/user-attachments/assets/3e6760ea-2cda-4f84-be03-1da174b7165d" />
+
 # CoW - Coworking App
 
 Welcome to **CoW**, an MVP for coworking space management and booking.
