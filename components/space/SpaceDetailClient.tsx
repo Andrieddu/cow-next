@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useCallback,
   useSyncExternalStore,
+  useEffect,
 } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -77,6 +78,7 @@ import { format, parseISO, isValid } from "date-fns";
 import { it } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
 import { checkAvailability } from "@/actions/booking-actions";
+import { timeToMinutes } from "@/utils/time";
 
 // Helper MediaQuery
 function useMediaQuery(query: string) {
@@ -147,7 +149,7 @@ export default function SpaceDetailClient({
   const urlEndDate = searchParams.get("endDate");
   const urlStartHour = searchParams.get("start");
   const urlEndHour = searchParams.get("end");
-  const urlGuests = searchParams.get("guests"); // <-- 1. Leggiamo i guests dall'URL
+  const urlGuests = searchParams.get("guests");
 
   const [date, setDate] = useState<DateRange | undefined>(() => {
     const from = urlStartDate ? parseISO(urlStartDate) : new Date();
@@ -160,10 +162,7 @@ export default function SpaceDetailClient({
 
   const [startTime, setStartTime] = useState(urlStartHour || "09:00");
   const [endTime, setEndTime] = useState(urlEndHour || "13:00");
-
-  // 2. Inizializziamo lo stato con il valore dell'URL, oppure 1
   const [guests, setGuests] = useState(urlGuests ? parseInt(urlGuests, 10) : 1);
-
   const [isFullDay, setIsFullDay] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
@@ -171,6 +170,53 @@ export default function SpaceDetailClient({
   const [availabilityError, setAvailabilityError] = useState<string | null>(
     null,
   );
+
+  // --- LOGICA DURATA CON MINUTI PRECISI ---
+  const duration = useMemo(() => {
+    const startMins = timeToMinutes(startTime);
+    const endMins = timeToMinutes(endTime);
+    return Math.max(0.5, (endMins - startMins) / 60);
+  }, [startTime, endTime]);
+
+  // --- LOGICA SCONTI E PREZZI INTELLIGENTE ---
+  const isHourly = !!space.hourlyPrice;
+
+  // Quanto costerebbe in base puramente oraria?
+  const calculatedHourlyTotal = isHourly
+    ? (space.hourlyPrice || 0) * duration
+    : 0;
+
+  // Conviene applicare lo sconto giornaliero in automatico?
+  const shouldApplyDailyDiscount =
+    !isFullDay &&
+    isHourly &&
+    space.dailyPrice &&
+    calculatedHourlyTotal > space.dailyPrice;
+
+  // L'effetto che "clicca" il checkbox per l'utente
+  useEffect(() => {
+    if (shouldApplyDailyDiscount) {
+      setIsFullDay(true);
+      toast.success("Sconto applicato!", {
+        description:
+          "Abbiamo applicato la tariffa giornaliera, è più conveniente!",
+        icon: "💰",
+      });
+    }
+  }, [shouldApplyDailyDiscount]);
+
+  // Se è isFullDay (scelto dall'utente o dall'effetto sopra), paga il daily. Altrimenti l'orario.
+  const totalPrice = isFullDay ? space.dailyPrice || 0 : calculatedHourlyTotal;
+
+  // Ci serve per mostrare la riga verde dello sconto alla fine
+  // È vero se l'utente ha la giornata intera e il prezzo a ore sarebbe stato più alto
+  const isDailyDiscountApplied =
+    isFullDay && isHourly && calculatedHourlyTotal > (space.dailyPrice || 0);
+
+  const priceLabel = isFullDay ? "giorno" : isHourly ? "ora" : "giorno";
+  const currentBasePrice = isFullDay
+    ? space.dailyPrice || 0
+    : space.hourlyPrice || space.dailyPrice || 0;
 
   const handleShare = async () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
@@ -205,7 +251,7 @@ export default function SpaceDetailClient({
     }
 
     setIsChecking(true);
-    setAvailabilityError(null); // Resettiamo l'errore precedente
+    setAvailabilityError(null);
 
     try {
       const result = await checkAvailability(
@@ -217,9 +263,9 @@ export default function SpaceDetailClient({
       );
 
       if (result.available) {
-        setIsModalOpen(true); // Modale Verde (OK)
+        setIsModalOpen(true);
       } else {
-        setAvailabilityError(result.error || "Spazio non disponibile."); // Modale Rossa (Errore)
+        setAvailabilityError(result.error || "Spazio non disponibile.");
       }
     } catch (error) {
       console.error("Errore durante il controllo della disponibilità:", error);
@@ -233,40 +279,17 @@ export default function SpaceDetailClient({
 
   const handleConfirmBooking = () => {
     setIsModalOpen(false);
-
     const params = new URLSearchParams();
     params.set("spaceId", space.id);
-
     if (date?.from) params.set("startDate", format(date.from, "yyyy-MM-dd"));
     if (date?.to) params.set("endDate", format(date.to, "yyyy-MM-dd"));
-
     params.set("start", startTime);
     params.set("end", endTime);
-
-    // 3. I guests vengono passati all'URL di checkout!
     params.set("guests", guests.toString());
     params.set("totalPrice", totalPrice.toString());
     params.set("isFullDay", isFullDay ? "true" : "false");
-
     router.push(`/checkout?${params.toString()}`);
   };
-
-  const duration = useMemo(() => {
-    const startHour = parseInt(startTime.split(":")[0]);
-    const endHour = parseInt(endTime.split(":")[0]);
-    return Math.max(1, endHour - startHour);
-  }, [startTime, endTime]);
-
-  const isHourly = !!space.hourlyPrice;
-  const currentBasePrice = isFullDay
-    ? space.dailyPrice || 0
-    : space.hourlyPrice || space.dailyPrice || 0;
-  const priceLabel = isFullDay ? "giorno" : isHourly ? "ora" : "giorno";
-  const totalPrice = isFullDay
-    ? space.dailyPrice || 0
-    : isHourly
-      ? (space.hourlyPrice || 0) * duration
-      : space.dailyPrice || 0;
 
   const averageRating =
     space.reviews?.length > 0
@@ -465,10 +488,7 @@ export default function SpaceDetailClient({
 
             <div className="space-y-6">
               <h3 className="text-xl font-bold">Dove ti troverai</h3>
-
-              {/* Contenitore Mappa */}
               <div className="relative w-full h-[350px] rounded-sm overflow-hidden border border-border/50 shadow-inner bg-secondary/20">
-                {/* L'Iframe magico di Google Maps */}
                 <iframe
                   title={`Mappa per ${space.title}`}
                   width="100%"
@@ -715,7 +735,7 @@ export default function SpaceDetailClient({
               </form>
 
               <div className="mt-8 space-y-4 pt-8 border-t border-border/50">
-                <div className="flex justify-between text-sm font-bold">
+                <div className="flex justify-between text-sm font-bold items-center">
                   <span className="text-muted-foreground underline underline-offset-4 decoration-muted-foreground/30">
                     €{currentBasePrice.toFixed(2)} x{" "}
                     {isFullDay
@@ -724,10 +744,26 @@ export default function SpaceDetailClient({
                         ? `${duration} ore`
                         : "1 giorno"}
                   </span>
-                  <span className="text-foreground">
-                    €{totalPrice.toFixed(2)}
-                  </span>
+                  {isDailyDiscountApplied ? (
+                    <span className="text-muted-foreground line-through decoration-destructive/60">
+                      €{calculatedHourlyTotal.toFixed(2)}
+                    </span>
+                  ) : (
+                    <span className="text-foreground">
+                      €{totalPrice.toFixed(2)}
+                    </span>
+                  )}
                 </div>
+
+                {isDailyDiscountApplied && (
+                  <div className="flex justify-between text-sm font-bold items-center text-emerald-500">
+                    <span>Tariffa giornaliera applicata</span>
+                    <span>
+                      -€{(calculatedHourlyTotal - totalPrice).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-xl font-extrabold pt-4 border-t border-dashed border-border/50">
                   <span>Totale stimato</span>
                   <span className="text-accent">€{totalPrice.toFixed(2)}</span>
@@ -738,13 +774,12 @@ export default function SpaceDetailClient({
         </div>
       </div>
 
-      {/* --- MODALE DISPONIBILITÀ (SUCCESSO) --- */}
+      {/* --- MODALE DISPONIBILITÀ (SUCCESSO E ERRORE INVARIATI) --- */}
       {isDesktop ? (
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="sm:max-w-[425px] rounded-[2rem] p-6 gap-6">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-foreground">
-                {/* Icona della spunta, colorata di giallo come il bottone primario */}
                 <CheckCircle className="h-6 w-6 text-primary" /> Spazio
                 Disponibile!
               </DialogTitle>
@@ -753,9 +788,7 @@ export default function SpaceDetailClient({
                 è libero per le date selezionate.
               </DialogDescription>
             </DialogHeader>
-
             {BookingSummaryContent}
-
             <DialogFooter className="flex-col sm:flex-col gap-3 sm:space-x-0">
               <Button
                 onClick={handleConfirmBooking}
@@ -777,7 +810,6 @@ export default function SpaceDetailClient({
         <Drawer open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DrawerContent className="rounded-t-[2rem]">
             <div className="p-6 pb-8 gap-6 flex flex-col items-center text-center">
-              {/* Layout centrato coerente con il Drawer di errore */}
               <DrawerHeader className="px-0 flex flex-col items-center w-full">
                 <DrawerTitle className="text-2xl font-bold flex flex-col sm:flex-row items-center justify-center gap-2 text-foreground">
                   <CheckCircle className="h-8 w-8 mb-2 sm:mb-0 text-primary" />{" "}
@@ -789,10 +821,7 @@ export default function SpaceDetailClient({
                   le date selezionate.
                 </DrawerDescription>
               </DrawerHeader>
-
-              {/* Riepilogo allineato a sinistra per leggibilità */}
               <div className="w-full text-left">{BookingSummaryContent}</div>
-
               <DrawerFooter className="px-0 flex-col gap-3 w-full mt-2">
                 <Button
                   onClick={handleConfirmBooking}
@@ -813,7 +842,6 @@ export default function SpaceDetailClient({
         </Drawer>
       )}
 
-      {/* --- MODALE ERRORE DISPONIBILITÀ --- */}
       {isDesktop ? (
         <Dialog
           open={!!availabilityError}
@@ -849,7 +877,6 @@ export default function SpaceDetailClient({
         >
           <DrawerContent className="rounded-t-[2rem] border-destructive/20">
             <div className="p-6 pb-8 gap-6 flex flex-col items-center text-center">
-              {/* Rimossa la classe px-0 text-left e aggiunto l'allineamento al centro per i figli */}
               <DrawerHeader className="px-0 flex flex-col items-center w-full">
                 <DrawerTitle className="text-2xl font-bold flex flex-col sm:flex-row items-center justify-center gap-2 text-destructive">
                   <AlertCircle className="h-8 w-8 mb-2 sm:mb-0" /> Non
