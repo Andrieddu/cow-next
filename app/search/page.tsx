@@ -2,17 +2,14 @@ import React, { Suspense } from "react";
 import SearchClient from "@/components/search/SearchClient";
 import { SpaceService } from "@/services/space-service";
 
-// In Next.js 15, searchParams è una Promise!
 type Props = {
   searchParams: Promise<{ q?: string; start?: string; end?: string }>;
 };
 
 export default async function SearchPage({ searchParams }: Props) {
-  // Risolviamo i parametri dell'URL
   const params = await searchParams;
   const searchQuery = params.q;
 
-  // Richiediamo al Server i dati reali dal DB
   const spaces = await SpaceService.searchActiveSpaces(searchQuery);
 
   return (
