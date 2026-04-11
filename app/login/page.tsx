@@ -5,14 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { ArrowRight } from "lucide-react";
 
-// 1. Importiamo l'azione di login
 import { login } from "@/actions/auth-actions";
 
-// 2. Tipo per i searchParams asincroni di Next 15
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export default async function LoginPage(props: { searchParams: SearchParams }) {
-  // 3. Risolviamo i parametri in modo asincrono
   const searchParams = await props.searchParams;
   const error = searchParams.error as string | undefined;
   const message = searchParams.message as string | undefined;
@@ -20,7 +17,7 @@ export default async function LoginPage(props: { searchParams: SearchParams }) {
   return (
     <main className="flex min-h-[calc(100vh-80px)] w-full items-center justify-center p-6 bg-secondary/5">
       <div className="w-full max-w-md bg-background p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-border/50">
-        {/* Logo e Intestazione */}
+        {/* Logo & Header */}
         <div className="flex flex-col items-center text-center mb-8">
           <Link href="/" className="mb-6 hover:opacity-90 transition-opacity">
             <Image
@@ -39,27 +36,25 @@ export default async function LoginPage(props: { searchParams: SearchParams }) {
           </p>
         </div>
 
-        {/* 4. Alert per Errori (es. Credenziali Errate) */}
+        {/* Error Alert */}
         {error && (
           <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-center text-sm font-bold text-destructive">
             {error}
           </div>
         )}
 
-        {/* 5. Alert per Messaggi di Successo (es. Conferma inviata) */}
+        {/* Success Alert */}
         {message && (
           <div className="mb-6 rounded-xl border border-primary/20 bg-primary/10 p-4 text-center text-sm font-bold text-primary">
             {message}
           </div>
         )}
 
-        {/* 6. Colleghiamo il form all'azione */}
         <form action={login}>
           <FieldSet>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                {/* Aggiunti name e required */}
                 <Input
                   id="email"
                   name="email"
@@ -80,7 +75,6 @@ export default async function LoginPage(props: { searchParams: SearchParams }) {
                     Dimenticata?
                   </Link>
                 </div>
-                {/* Aggiunti name e required */}
                 <Input
                   id="password"
                   name="password"
@@ -102,7 +96,6 @@ export default async function LoginPage(props: { searchParams: SearchParams }) {
           </FieldSet>
         </form>
 
-        {/* Separatore */}
         <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-border/50" />
