@@ -12,23 +12,20 @@ import {
 } from "@/components/ui/field";
 import { ArrowRight } from "lucide-react";
 
-// 1. Importiamo l'azione dal nostro file
 import { signup } from "@/actions/auth-actions";
 
-// Aggiungiamo type per la nuova convenzione di Next.js
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export default async function SignupPage(props: {
   searchParams: SearchParams;
 }) {
-  // 2. Risolviamo la Promise per accedere ai parametri
   const searchParams = await props.searchParams;
   const error = searchParams.error as string | undefined;
 
   return (
     <main className="flex min-h-[calc(100vh-80px)] w-full items-center justify-center p-6 bg-secondary/5">
       <div className="w-full max-w-lg bg-background p-8 md:p-10 rounded-[2.5rem] shadow-xl border border-border/50">
-        {/* Logo e Header */}
+        {/* Logo & Header */}
         <div className="flex flex-col items-center text-center mb-8">
           <Link href="/" className="mb-6 hover:opacity-90 transition-opacity">
             <Image
@@ -48,22 +45,20 @@ export default async function SignupPage(props: {
           </p>
         </div>
 
-        {/* Alert per Errori (Es. Password troppo corta) */}
+        {/* Error Alert */}
         {error && (
           <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-center text-sm font-bold text-destructive">
             {error}
           </div>
         )}
 
-        {/* 2. Colleghiamo il form alla Server Action */}
         <form action={signup}>
           <FieldSet>
             <FieldGroup>
-              {/* Nome e Cognome */}
+              {/* Name & Surname */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="name">Nome</FieldLabel>
-                  {/* Aggiunto name="name" e required */}
                   <Input
                     id="name"
                     name="name"
@@ -74,7 +69,6 @@ export default async function SignupPage(props: {
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="surname">Cognome</FieldLabel>
-                  {/* Aggiunto name="surname" e required */}
                   <Input
                     id="surname"
                     name="surname"
@@ -88,7 +82,6 @@ export default async function SignupPage(props: {
               {/* Email */}
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                {/* Aggiunto name="email" e required */}
                 <Input
                   id="email"
                   name="email"
@@ -108,7 +101,6 @@ export default async function SignupPage(props: {
                 <FieldDescription>
                   Deve essere di almeno 8 caratteri.
                 </FieldDescription>
-                {/* Aggiunto name="password" e required */}
                 <Input
                   id="password"
                   name="password"
@@ -152,7 +144,6 @@ export default async function SignupPage(props: {
           </FieldGroup>
         </form>
 
-        {/* Separatore */}
         <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-border/50" />
