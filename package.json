@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "graphify": "graphify update . --backend ollama --model qwen2.5-coder:7b",
+    "graphify:full": "graphify extract . --backend ollama --model qwen2.5-coder:7b"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
