@@ -140,7 +140,6 @@ export function HeroSearchForm() {
               align="center"
             >
               <Calendar
-                initialFocus
                 mode="range"
                 defaultMonth={date?.from}
                 selected={date}
