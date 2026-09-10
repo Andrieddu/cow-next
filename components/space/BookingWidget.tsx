@@ -144,14 +144,13 @@ export default function BookingWidget(props: Props) {
                     align="end"
                   >
                     <Calendar
-                      initialFocus
-                      mode="range"
-                      defaultMonth={date?.from}
-                      selected={date}
-                      onSelect={setDate}
-                      numberOfMonths={2}
-                      locale={it}
-                      className="bg-background rounded-3xl"
+                        mode="range"
+                        defaultMonth={date?.from || new Date()}
+                        selected={date}
+                        onSelect={setDate}
+                        numberOfMonths={2}
+                        locale={it}
+                        className="bg-background rounded-3xl"
                     />
                   </PopoverContent>
                 </Popover>

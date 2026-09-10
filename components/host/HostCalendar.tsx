@@ -157,24 +157,19 @@ export default function HostCalendarClient({
                   classNames={{
                     months: "w-full",
                     month: "w-full space-y-4",
-                    caption:
-                      "flex justify-center pt-1 relative items-center mb-4",
-                    caption_label:
-                      "text-sm md:text-lg font-bold text-foreground capitalize",
+                    month_caption: "flex justify-center pt-1 relative items-center mb-4",
+                    caption_label: "text-sm md:text-lg font-bold text-foreground capitalize",
                     nav: "space-x-1 flex items-center",
-                    nav_button:
-                      "h-8 w-8 md:h-9 md:w-9 bg-background border border-border/50 rounded-lg md:rounded-xl flex items-center justify-center hover:bg-secondary/10 transition-colors",
-                    table: "w-full border-collapse space-y-1",
-                    head_row: "flex w-full justify-between",
-                    head_cell:
-                      "text-muted-foreground rounded-md w-8 md:w-12 font-bold text-[10px] md:text-[12px] uppercase tracking-widest",
-                    row: "flex w-full mt-2 justify-between",
-                    cell: "text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                    day: "h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 p-0 font-bold aria-selected:opacity-100 hover:bg-accent/10 hover:text-accent rounded-lg md:rounded-xl transition-all flex items-center justify-center text-xs md:text-sm relative",
-                    day_selected:
-                      "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground after:bg-white", // Se è selezionato, il pallino rosso diventa bianco
-                    day_today:
-                      "bg-secondary/20 text-foreground border border-border/50",
+                    button_previous: "h-8 w-8 md:h-9 md:w-9 bg-background border border-border/50 rounded-lg md:rounded-xl flex items-center justify-center hover:bg-secondary/10 transition-colors",
+                    button_next: "h-8 w-8 md:h-9 md:w-9 bg-background border border-border/50 rounded-lg md:rounded-xl flex items-center justify-center hover:bg-secondary/10 transition-colors",
+                    month_grid: "w-full border-collapse space-y-1",
+                    weekdays: "flex w-full justify-between",
+                    weekday: "text-muted-foreground w-8 md:w-12 font-bold text-[10px] md:text-[12px] uppercase tracking-widest text-center",
+                    week: "flex w-full mt-2 justify-between",
+                    day: "text-center text-sm p-0 relative focus-within:relative focus-within:z-20 h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12",
+                    day_button: "h-full w-full p-0 font-bold aria-selected:opacity-100 hover:bg-accent/10 hover:text-accent rounded-lg md:rounded-xl transition-all flex items-center justify-center text-xs md:text-sm relative",
+                    selected: "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground after:bg-white",
+                    today: "bg-secondary/20 text-foreground border border-border/50",
                   }}
                 />
               </div>
