@@ -1,15 +1,16 @@
-# Graph Report - cow-next  (2026-09-04)
+# Graph Report - cow-next  (2026-09-10)
 
 ## Corpus Check
-- cluster-only mode — file stats not available
+- 143 files · ~233,340 words
+- Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2090 nodes · 2930 edges · 71 communities (36 shown, 34 thin omitted)
+- 2228 nodes · 3050 edges · 88 communities (47 shown, 40 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 3 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f4438b96`
+- Built from commit: `3a6f450e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -31,7 +32,7 @@
 - cn
 - BookingCardClient.tsx
 - prismaNamespaceBrowser.ts
-- Navbar.tsx
+- What You Must Do When Invoked
 - compilerOptions
 - PrismaClient
 - devDependencies
@@ -50,14 +51,14 @@
 - ReviewDelegate
 - SpaceDelegate
 - UserDelegate
-- dropdown-menu.tsx
+- What You Must Do When Invoked
 - host/bookings/page.tsx
 - Prisma__UserClient
-- SearchClient.tsx
+- graphify reference: extra exports and benchmark
 - prisma/client.ts
 - enums.ts
 - scripts
-- space-actions.ts
+- layout.tsx
 - Prisma__BookingClient
 - Prisma__ConversationClient
 - Prisma__PaymentClient
@@ -65,25 +66,42 @@
 - Prisma__SpaceClient
 - Prisma__MessageClient
 - Prisma__PayoutClient
-- checkout/page.tsx
-- SpaceCard.tsx
+- CheckoutClient.tsx
+- graphify reference: extra exports and benchmark
 - Prisma__BillingInfoClient
 - Prisma__PaymentMethodClient
 - middleware.ts
 - date-fns
 - eslint.config.mjs
-- lucide-react
+- package.json
 - next
 - next.config.ts
 - next-themes
 - @prisma/adapter-pg
-- radix-ui
-- react
-- shadcn
+- graphify reference: query, path, explain
+- app/page.tsx
+- graphify reference: query, path, explain
 - tailwind-merge
 - vaul
-- zod
+- CoW - Coworking App
 - postcss.config.mjs
+- graphify reference: add a URL and watch a folder
+- graphify reference: commit hook and native AGENTS.md integration
+- graphify reference: incremental update and cluster-only
+- graphify reference: add a URL and watch a folder
+- graphify reference: commit hook and native CLAUDE.md integration
+- graphify reference: incremental update and cluster-only
+- graphify reference: GitHub clone and cross-repo merge
+- graphify reference: transcribe video and audio
+- graphify reference: GitHub clone and cross-repo merge
+- graphify reference: transcribe video and audio
+- PrismaClientBaseOptions
+- AGENTS.md
+- .agents/skills/graphify/references/extraction-spec.md
+- .copilot/skills/graphify/references/extraction-spec.md
+- react-day-picker
+- react-dom
+- @supabase/supabase-js
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 129 edges
@@ -98,21 +116,21 @@
 10. `PaymentMethodDelegate` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `RootLayout()` --calls--> `createClient()`  [EXTRACTED]
+  app/layout.tsx → utils/supabase/server.ts
+- `BookingsPage()` --calls--> `createClient()`  [EXTRACTED]
+  app/profile/bookings/page.tsx → utils/supabase/server.ts
+- `SettingsPage()` --calls--> `createClient()`  [EXTRACTED]
+  app/profile/settings/page.tsx → utils/supabase/server.ts
 - `Badge()` --calls--> `cn()`  [EXTRACTED]
   components/host/HostBookingCard.tsx → lib/utils.ts
 - `AvatarBadge()` --calls--> `cn()`  [EXTRACTED]
   components/ui/avatar.tsx → lib/utils.ts
-- `AvatarGroup()` --calls--> `cn()`  [EXTRACTED]
-  components/ui/avatar.tsx → lib/utils.ts
-- `AvatarGroupCount()` --calls--> `cn()`  [EXTRACTED]
-  components/ui/avatar.tsx → lib/utils.ts
-- `CalendarDayButton()` --calls--> `cn()`  [EXTRACTED]
-  components/ui/calendar.tsx → lib/utils.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (71 total, 34 thin omitted)
+## Communities (88 total, 40 thin omitted)
 
 ### Community 0 - "User.ts"
 Cohesion: 0.01
@@ -120,7 +138,7 @@ Nodes (169): AggregateUser, BoolFieldUpdateOperationsInput, DateTimeFieldUpdateO
 
 ### Community 1 - "prismaNamespace.ts"
 Cohesion: 0.02
-Nodes (128): AnyNull, Args, At, AtLeast, AtLoose, AtStrict, BatchPayload, BillingInfoScalarFieldEnum (+120 more)
+Nodes (129): AnyNull, Args, At, AtLeast, AtLoose, AtStrict, BatchPayload, BillingInfoScalarFieldEnum (+121 more)
 
 ### Community 2 - "Booking.ts"
 Cohesion: 0.02
@@ -151,8 +169,8 @@ Cohesion: 0.02
 Nodes (88): AggregateMessage, GetMessageAggregateType, GetMessageGroupByPayload, MessageAggregateArgs, MessageCountAggregateInputType, MessageCountAggregateOutputType, MessageCountArgs, MessageCountOrderByAggregateInput (+80 more)
 
 ### Community 9 - "createClient"
-Cohesion: 0.05
-Nodes (59): login(), logout(), signup(), updatePasswordAction(), BookingData, checkAvailability(), createBookingAction(), updateBookingStatus() (+51 more)
+Cohesion: 0.08
+Nodes (38): login(), logout(), signup(), markMessagesAsReadAction(), sendMessageAction(), createReviewAction(), ReviewSchema, createSpaceAction() (+30 more)
 
 ### Community 10 - "PaymentMethod.ts"
 Cohesion: 0.03
@@ -167,24 +185,24 @@ Cohesion: 0.04
 Nodes (54): BoolFilter, BoolWithAggregatesFilter, DateTimeFilter, DateTimeNullableFilter, DateTimeNullableWithAggregatesFilter, DateTimeWithAggregatesFilter, EnumBookingStatusFilter, EnumBookingStatusWithAggregatesFilter (+46 more)
 
 ### Community 13 - "HostCreateSpaceForm.tsx"
-Cohesion: 0.13
-Nodes (31): createSpaceAction(), updateSpaceAction(), SearchParams, SearchParams, ProfileFormProps, timeOptions, HostCreateSpaceForm(), EditSpaceForm() (+23 more)
+Cohesion: 0.16
+Nodes (26): SearchParams, SearchParams, timeOptions, Props, timeOptions, Checkbox(), Field(), FieldDescription() (+18 more)
 
 ### Community 14 - "cn"
-Cohesion: 0.10
-Nodes (28): HostReviewsPage(), Badge(), badgeVariants, Card(), CardAction(), CardContent(), CardDescription(), CardFooter() (+20 more)
+Cohesion: 0.12
+Nodes (23): HostReviewsPage(), HeroSearchForm(), Badge(), badgeVariants, Card(), CardAction(), CardContent(), CardDescription() (+15 more)
 
 ### Community 15 - "BookingCardClient.tsx"
-Cohesion: 0.15
-Nodes (24): deleteSpaceAction(), HostSpaceDropdown(), useMediaQuery(), BookingCardClient(), formatSpaceType(), formatStatus(), getStatusColor(), useMediaQuery() (+16 more)
+Cohesion: 0.05
+Nodes (59): getOrCreateConversationAction(), deleteSpaceAction(), Badge(), HostBookingCard(), HostSpaceDropdown(), useMediaQuery(), BookingCardClient(), formatSpaceType() (+51 more)
 
 ### Community 16 - "prismaNamespaceBrowser.ts"
 Cohesion: 0.06
 Nodes (31): BillingInfo, Booking, Conversation, $Enums, Message, Payment, PaymentMethod, Payout (+23 more)
 
-### Community 17 - "Navbar.tsx"
-Cohesion: 0.14
-Nodes (21): getOrCreateConversationAction(), Badge(), HostBookingCard(), SearchMobileSheetProps, SidebarProps, getAmenityIcon(), SpaceInfo(), Avatar() (+13 more)
+### Community 17 - "What You Must Do When Invoked"
+Cohesion: 0.08
+Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native AGENTS.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 18 - "compilerOptions"
 Cohesion: 0.07
@@ -195,88 +213,132 @@ Cohesion: 0.07
 Nodes (4): config, LogOptions, PrismaClient, PrismaClientConstructor
 
 ### Community 20 - "devDependencies"
-Cohesion: 0.09
-Nodes (23): eslint, eslint-config-next, devDependencies, eslint, eslint-config-next, prisma, tailwindcss, @tailwindcss/postcss (+15 more)
+Cohesion: 0.08
+Nodes (25): eslint, eslint-config-next, jiti, devDependencies, eslint, eslint-config-next, jiti, prisma (+17 more)
 
 ### Community 21 - "components.json"
 Cohesion: 0.09
 Nodes (21): aliases, components, hooks, lib, ui, utils, iconLibrary, menuAccent (+13 more)
 
 ### Community 22 - "button.tsx"
-Cohesion: 0.16
-Nodes (8): FeaturesSection(), QuickExplore(), BookingData, CancelBookingButtonProps, Button(), buttonVariants, Calendar(), CalendarDayButton()
+Cohesion: 0.11
+Nodes (21): updateNotificationsAction(), BookingsPage(), SettingsPage(), NotificationForm(), NotificationFormProps, ProfileForm(), ProfileFormProps, BookingData (+13 more)
 
 ### Community 23 - "dependencies"
-Cohesion: 0.10
-Nodes (21): class-variance-authority, clsx, dependencies, class-variance-authority, clsx, pg, @prisma/client, react-day-picker (+13 more)
+Cohesion: 0.08
+Nodes (25): class-variance-authority, clsx, lucide-react, dependencies, class-variance-authority, clsx, lucide-react, pg (+17 more)
 
 ### Community 24 - "mock-data.ts"
 Cohesion: 0.10
 Nodes (17): Booking, BookingStatus, mockBookings, mockPaymentMethods, mockPayments, mockReviews, mockSpaces, mockUsers (+9 more)
 
 ### Community 25 - "SpaceDetailClient.tsx"
-Cohesion: 0.19
-Nodes (14): HeroSearchForm(), BookingModals(), BookingWidget(), Props, SpaceDetailClient(), SpaceDetailData, useMediaQuery(), SpaceGallery() (+6 more)
+Cohesion: 0.08
+Nodes (28): checkAvailability(), Props, SearchClient(), SpaceData, Props, SearchMobileHeader(), SearchMobileSheet(), SearchResults() (+20 more)
 
-### Community 36 - "dropdown-menu.tsx"
-Cohesion: 0.15
-Nodes (11): DropdownMenu(), DropdownMenuCheckboxItem(), DropdownMenuContent(), DropdownMenuItem(), DropdownMenuLabel(), DropdownMenuRadioItem(), DropdownMenuSeparator(), DropdownMenuShortcut() (+3 more)
+### Community 36 - "What You Must Do When Invoked"
+Cohesion: 0.08
+Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 37 - "host/bookings/page.tsx"
-Cohesion: 0.22
-Nodes (4): getStatusColor(), getStatusLabel(), HostBookingsPage(), Separator()
+Cohesion: 0.26
+Nodes (6): updatePasswordAction(), getStatusColor(), getStatusLabel(), HostBookingsPage(), UpdatePasswordForm(), Input()
 
-### Community 39 - "SearchClient.tsx"
-Cohesion: 0.20
-Nodes (9): SearchClient(), Props, SearchMobileHeader(), SearchMobileSheet(), SearchResults(), amenitiesFilter, Props, SearchSidebar() (+1 more)
+### Community 39 - "graphify reference: extra exports and benchmark"
+Cohesion: 0.22
+Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
 
 ### Community 40 - "prisma/client.ts"
-Cohesion: 0.17
-Nodes (11): BillingInfo, Booking, Conversation, $Enums, Message, Payment, PaymentMethod, Payout (+3 more)
+Cohesion: 0.15
+Nodes (12): BillingInfo, Booking, Conversation, $Enums, Message, Payment, PaymentMethod, Payout (+4 more)
 
 ### Community 41 - "enums.ts"
-Cohesion: 0.24
-Nodes (8): PrismaClient, BookingStatus, PaymentStatus, PayoutStatus, UserRole, adapter, pool, prisma
+Cohesion: 0.27
+Nodes (7): BookingStatus, PaymentStatus, PayoutStatus, UserRole, adapter, pool, prisma
 
 ### Community 42 - "scripts"
+Cohesion: 0.22
+Nodes (9): scripts, build, dev, graphify, graphify:full, lint, postinstall, start (+1 more)
+
+### Community 43 - "layout.tsx"
+Cohesion: 0.28
+Nodes (6): inter, metadata, RootLayout(), Footer(), Navbar(), Toaster()
+
+### Community 51 - "CheckoutClient.tsx"
 Cohesion: 0.18
-Nodes (10): name, private, scripts, build, dev, lint, postinstall, start (+2 more)
+Nodes (11): BookingData, createBookingAction(), updateBookingStatus(), Props, CheckoutClient(), formatSpaceType(), BookingActions(), BookingActionsProps (+3 more)
 
-### Community 43 - "space-actions.ts"
-Cohesion: 0.29
-Nodes (4): CreateSpaceSchema, Props, SpaceType, SpaceService
-
-### Community 51 - "checkout/page.tsx"
-Cohesion: 0.40
-Nodes (3): Props, CheckoutClient(), formatSpaceType()
-
-### Community 52 - "SpaceCard.tsx"
-Cohesion: 0.60
-Nodes (4): SpaceData, formatSpaceType(), Props, SpaceCard()
+### Community 52 - "graphify reference: extra exports and benchmark"
+Cohesion: 0.22
+Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
 
 ### Community 55 - "middleware.ts"
 Cohesion: 0.60
 Nodes (3): config, middleware(), updateSession()
 
+### Community 58 - "package.json"
+Cohesion: 0.29
+Nodes (6): name, overrides, deepmerge-ts, mysql2, private, version
+
+### Community 63 - "graphify reference: query, path, explain"
+Cohesion: 0.33
+Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
+
+### Community 65 - "graphify reference: query, path, explain"
+Cohesion: 0.33
+Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
+
+### Community 68 - "CoW - Coworking App"
+Cohesion: 0.40
+Nodes (4): CoW - Coworking App, Local Development, Tech Stack, Workflows
+
+### Community 71 - "graphify reference: add a URL and watch a folder"
+Cohesion: 0.50
+Nodes (3): For /graphify add, For --watch, graphify reference: add a URL and watch a folder
+
+### Community 72 - "graphify reference: commit hook and native AGENTS.md integration"
+Cohesion: 0.50
+Nodes (3): For git commit hook, For native AGENTS.md integration, graphify reference: commit hook and native AGENTS.md integration
+
+### Community 73 - "graphify reference: incremental update and cluster-only"
+Cohesion: 0.50
+Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
+
+### Community 74 - "graphify reference: add a URL and watch a folder"
+Cohesion: 0.50
+Nodes (3): For /graphify add, For --watch, graphify reference: add a URL and watch a folder
+
+### Community 75 - "graphify reference: commit hook and native CLAUDE.md integration"
+Cohesion: 0.50
+Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify reference: commit hook and native CLAUDE.md integration
+
+### Community 76 - "graphify reference: incremental update and cluster-only"
+Cohesion: 0.50
+Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
+
+### Community 81 - "PrismaClientBaseOptions"
+Cohesion: 0.67
+Nodes (3): PrismaClientBaseOptions, PrismaClientOptionsWithAccelerateUrl, PrismaClientOptionsWithAdapter
+
 ## Knowledge Gaps
-- **1424 isolated node(s):** `AggregateUser`, `BoolFieldUpdateOperationsInput`, `DateTimeFieldUpdateOperationsInput`, `EnumUserRoleFieldUpdateOperationsInput`, `GetUserAggregateType` (+1419 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1713 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **34 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **1516 isolated node(s):** `BookingData`, `ReviewSchema`, `CreateSpaceSchema`, `UpdateProfileSchema`, `Props` (+1511 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1825 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **40 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PaymentDelegate` connect `PaymentDelegate` to `Payment.ts`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
-- **Why does `Prisma__PayoutClient` connect `Prisma__PayoutClient` to `Payout.ts`?**
-  _High betweenness centrality (0.030) - this node is a cross-community bridge._
-- **Why does `BookingStatus` connect `enums.ts` to `createClient`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
-- **What connects `AggregateUser`, `BoolFieldUpdateOperationsInput`, `DateTimeFieldUpdateOperationsInput` to the rest of the system?**
-  _1424 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `cn()` connect `cn` to `host/bookings/page.tsx`, `createClient`, `HostCreateSpaceForm.tsx`, `BookingCardClient.tsx`, `CheckoutClient.tsx`, `button.tsx`, `SpaceDetailClient.tsx`?**
+  _High betweenness centrality (0.038) - this node is a cross-community bridge._
+- **Why does `ReviewDelegate` connect `ReviewDelegate` to `Review.ts`?**
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
+- **Why does `BookingStatus` connect `enums.ts` to `CheckoutClient.tsx`?**
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+- **What connects `BookingData`, `ReviewSchema`, `CreateSpaceSchema` to the rest of the system?**
+  _1516 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `User.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.011764705882352941 - nodes in this community are weakly interconnected._
 - **Should `prismaNamespace.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.015503875968992248 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.015384615384615385 - nodes in this community are weakly interconnected._
 - **Should `Booking.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.015503875968992248 - nodes in this community are weakly interconnected._

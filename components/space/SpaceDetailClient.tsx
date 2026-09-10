@@ -105,39 +105,57 @@ export default function SpaceDetailClient({
     ? space.hourlyPrice! * duration
     : space.dailyPrice || 0;
 
-  useEffect(() => {
-    if (
-      isHourly &&
+  const shouldApplyDailyRate = Boolean(
+    isHourly &&
       space.dailyPrice !== null &&
-      calculatedHourlyTotal > space.dailyPrice
-    ) {
-      setIsFullDay((prev) => {
-        if (!prev) {
-          toast.success("Sconto applicato!", {
-            description:
-              "Abbiamo applicato la tariffa giornaliera, è più conveniente!",
-            icon: "💰",
-          });
-          return true;
-        }
-        return prev;
-      });
+      calculatedHourlyTotal > space.dailyPrice,
+  );
+
+  const showDailyRateDiscountToast = useCallback(() => {
+    toast.success("Sconto applicato!", {
+      description:
+        "Abbiamo applicato la tariffa giornaliera, è più conveniente!",
+      icon: "💰",
+    });
+  }, []);
+
+  useEffect(() => {
+    if (shouldApplyDailyRate && !isFullDay) {
+      showDailyRateDiscountToast();
     }
-  }, [duration, calculatedHourlyTotal, isHourly, space.dailyPrice]);
+  }, [isFullDay, shouldApplyDailyRate, showDailyRateDiscountToast]);
+
+  const handleFullDayChange = useCallback(
+    (value: boolean) => {
+      if (!value && shouldApplyDailyRate) {
+        showDailyRateDiscountToast();
+        setIsFullDay(true);
+        return;
+      }
+      setIsFullDay(value);
+    },
+    [shouldApplyDailyRate, showDailyRateDiscountToast],
+  );
+
+  const effectiveIsFullDay = isFullDay || shouldApplyDailyRate;
 
   const totalPrice =
-    isFullDay || !isHourly ? space.dailyPrice || 0 : calculatedHourlyTotal;
+    effectiveIsFullDay || !isHourly
+      ? space.dailyPrice || 0
+      : calculatedHourlyTotal;
 
   const isDailyDiscountApplied = Boolean(
-    isFullDay &&
+    effectiveIsFullDay &&
     isHourly &&
     space.dailyPrice !== null &&
     calculatedHourlyTotal > space.dailyPrice,
   );
 
-  const priceLabel = isFullDay || !isHourly ? "giorno" : "ora";
+  const priceLabel = effectiveIsFullDay || !isHourly ? "giorno" : "ora";
   const currentBasePrice =
-    isFullDay || !isHourly ? space.dailyPrice || 0 : space.hourlyPrice || 0;
+    effectiveIsFullDay || !isHourly
+      ? space.dailyPrice || 0
+      : space.hourlyPrice || 0;
 
   const handleCheckAvailability = async () => {
     if (!date?.from) return toast.error("Seleziona una data per procedere.");
@@ -171,7 +189,7 @@ export default function SpaceDetailClient({
     params.set("end", endTime);
     params.set("guests", guests.toString());
     params.set("totalPrice", totalPrice.toString());
-    params.set("isFullDay", isFullDay ? "true" : "false");
+    params.set("isFullDay", effectiveIsFullDay ? "true" : "false");
     router.push(`/checkout?${params.toString()}`);
   };
 
@@ -193,8 +211,8 @@ export default function SpaceDetailClient({
     setEndTime,
     guests,
     setGuests,
-    isFullDay,
-    setIsFullDay,
+    isFullDay: effectiveIsFullDay,
+    setIsFullDay: handleFullDayChange,
     duration,
     currentBasePrice,
     priceLabel,
@@ -241,7 +259,7 @@ export default function SpaceDetailClient({
         startTime={startTime}
         endTime={endTime}
         guests={guests}
-        isFullDay={isFullDay}
+        isFullDay={effectiveIsFullDay}
         totalPrice={totalPrice}
       />
     </main>
