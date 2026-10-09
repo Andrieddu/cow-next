@@ -69,7 +69,7 @@ export default async function LoginPage(props: { searchParams: SearchParams }) {
                 <div className="flex items-center justify-between">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <Link
-                    href="/recupero-password"
+                    href="/password-recovery"
                     className="text-[11px] font-bold text-accent hover:underline"
                   >
                     Dimenticata?
