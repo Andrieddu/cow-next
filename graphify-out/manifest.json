@@ -1,9 +1,9 @@
 {
   "actions/auth-actions.ts": {
-    "mtime": 1774339008.2484481,
-    "seen": 1788525357.5373728,
-    "ast_hash": "c1b2e997f128226831cf8ff2f7ab15a0",
-    "semantic_hash": "c1b2e997f128226831cf8ff2f7ab15a0"
+    "mtime": 1789140759.7614496,
+    "seen": 1789140775.775035,
+    "ast_hash": "9d85a793b996904ea12c285e8165c56e",
+    "semantic_hash": ""
   },
   "actions/booking-actions.ts": {
     "mtime": 1774116171.1521275,
@@ -120,10 +120,10 @@
     "semantic_hash": "7b641192d0f63f3d8a7e2e7f0c986621"
   },
   "app/login/page.tsx": {
-    "mtime": 1775897056.384679,
-    "seen": 1788525357.5373929,
-    "ast_hash": "51feaff08ecaaa72b62a3cc246d2b57a",
-    "semantic_hash": "51feaff08ecaaa72b62a3cc246d2b57a"
+    "mtime": 1789140099.2399924,
+    "seen": 1789140147.010955,
+    "ast_hash": "33671a3bcc279136f538349ceea2d379",
+    "semantic_hash": ""
   },
   "app/messages/page.tsx": {
     "mtime": 1774355584.567129,
@@ -162,10 +162,10 @@
     "semantic_hash": "6c20bb796c46314aab197e531657384a"
   },
   "app/signup/page.tsx": {
-    "mtime": 1775897056.3894017,
-    "seen": 1788525357.537397,
-    "ast_hash": "068902d53fc6bdd29e3f25498755decc",
-    "semantic_hash": "068902d53fc6bdd29e3f25498755decc"
+    "mtime": 1789138180.627,
+    "seen": 1789139954.985127,
+    "ast_hash": "3ef6a29d110f3f0527417d49d9a078b3",
+    "semantic_hash": ""
   },
   "app/space/[id]/page.tsx": {
     "mtime": 1774024216.904392,
@@ -210,8 +210,8 @@
     "semantic_hash": "24522c3934d36b180e4203f882636387"
   },
   "components/home/HeroSearchForm.tsx": {
-    "mtime": 1789055367.838,
-    "seen": 1789061810.828588,
+    "mtime": 1789062294.5836189,
+    "seen": 1789139954.985135,
     "ast_hash": "f95e6ebc953ca76d0c810ffc7d07b70f",
     "semantic_hash": ""
   },
@@ -240,8 +240,8 @@
     "semantic_hash": "fb4b4ba4fd93d686d317219789e3bb1d"
   },
   "components/host/HostCalendar.tsx": {
-    "mtime": 1789055642.923,
-    "seen": 1789061810.8285928,
+    "mtime": 1789062294.5852406,
+    "seen": 1789139954.985139,
     "ast_hash": "70d5407995e41b28f58a1e4bcbfd4cf4",
     "semantic_hash": ""
   },
@@ -354,14 +354,14 @@
     "semantic_hash": "b2307f0b0a80348f52c2e987efcdf206"
   },
   "components/space/BookingWidget.tsx": {
-    "mtime": 1789055784.703,
-    "seen": 1789061810.828608,
+    "mtime": 1789062294.5868692,
+    "seen": 1789139954.9851542,
     "ast_hash": "83ba83d6a99ededf8406f0ef2fa8963a",
     "semantic_hash": ""
   },
   "components/space/SpaceDetailClient.tsx": {
-    "mtime": 1789061742.3698294,
-    "seen": 1789061810.828609,
+    "mtime": 1789062294.588364,
+    "seen": 1789139954.985155,
     "ast_hash": "4dc689c11451ce6f505a7f5b8481981d",
     "semantic_hash": ""
   },
@@ -402,8 +402,8 @@
     "semantic_hash": "3fcad70601c7dc0eca0f18fba8295ff9"
   },
   "components/ui/calendar.tsx": {
-    "mtime": 1789055709.819,
-    "seen": 1789061810.828614,
+    "mtime": 1789062294.5902576,
+    "seen": 1789139954.985161,
     "ast_hash": "6e5d06afbfee47e6497e4e2cf3778ab4",
     "semantic_hash": ""
   },
@@ -522,110 +522,110 @@
     "semantic_hash": "d448d2a90e48542e51b93a1189127bf2"
   },
   "generated/prisma/browser.ts": {
-    "mtime": 1789057035.2581882,
-    "seen": 1789061810.828632,
+    "mtime": 1789062300.3149903,
+    "seen": 1789139954.985178,
     "ast_hash": "7a941f4811aebc8a28180f7e9c37bf35",
     "semantic_hash": "7a941f4811aebc8a28180f7e9c37bf35"
   },
   "generated/prisma/client.ts": {
-    "mtime": 1789057035.2580912,
-    "seen": 1789061810.828633,
+    "mtime": 1789062300.3149695,
+    "seen": 1789139954.985179,
     "ast_hash": "0c339af8c1decdecca2429d5593d05f3",
     "semantic_hash": "0c339af8c1decdecca2429d5593d05f3"
   },
   "generated/prisma/commonInputTypes.ts": {
-    "mtime": 1789057035.2582874,
-    "seen": 1789061810.828634,
+    "mtime": 1789062300.3150322,
+    "seen": 1789139954.98518,
     "ast_hash": "15afa4fba26771d8e4ff43b888c8aaf0",
     "semantic_hash": "15afa4fba26771d8e4ff43b888c8aaf0"
   },
   "generated/prisma/enums.ts": {
-    "mtime": 1789057035.2582314,
-    "seen": 1789061810.828635,
+    "mtime": 1789062300.3150034,
+    "seen": 1789139954.98518,
     "ast_hash": "5dda87f6f14498550fc2441a979a3f3d",
     "semantic_hash": "5dda87f6f14498550fc2441a979a3f3d"
   },
   "generated/prisma/internal/class.ts": {
-    "mtime": 1789057035.2615178,
-    "seen": 1789061810.828635,
+    "mtime": 1789062300.321594,
+    "seen": 1789139954.9851809,
     "ast_hash": "1a18cf44595e0012952fa17a9d8707cd",
     "semantic_hash": ""
   },
   "generated/prisma/internal/prismaNamespace.ts": {
-    "mtime": 1789057035.2615144,
-    "seen": 1789061810.828636,
+    "mtime": 1789062300.3211176,
+    "seen": 1789139954.985182,
     "ast_hash": "0a1978d55128c7f556176aba0bdc619c",
     "semantic_hash": ""
   },
   "generated/prisma/internal/prismaNamespaceBrowser.ts": {
-    "mtime": 1789057035.2614677,
-    "seen": 1789061810.828637,
+    "mtime": 1789062300.3211343,
+    "seen": 1789139954.985183,
     "ast_hash": "d1bc085aa7f2da19d8bc022efcb8c7f0",
     "semantic_hash": "d1bc085aa7f2da19d8bc022efcb8c7f0"
   },
   "generated/prisma/models.ts": {
-    "mtime": 1789057035.2582946,
-    "seen": 1789061810.8286378,
+    "mtime": 1789062300.3150957,
+    "seen": 1789139954.985183,
     "ast_hash": "5753f5b4bdba2fef87aecb8af218fce1",
     "semantic_hash": "5753f5b4bdba2fef87aecb8af218fce1"
   },
   "generated/prisma/models/BillingInfo.ts": {
-    "mtime": 1789057035.261563,
-    "seen": 1789061810.8286378,
+    "mtime": 1789062300.3186405,
+    "seen": 1789139954.985184,
     "ast_hash": "7ea1119e172503a244157bc25d02ebd5",
     "semantic_hash": "7ea1119e172503a244157bc25d02ebd5"
   },
   "generated/prisma/models/Booking.ts": {
-    "mtime": 1789057035.261628,
-    "seen": 1789061810.828639,
+    "mtime": 1789062300.319002,
+    "seen": 1789139954.985185,
     "ast_hash": "5d3b5eef9c74174de93698f6a11374d0",
     "semantic_hash": "5d3b5eef9c74174de93698f6a11374d0"
   },
   "generated/prisma/models/Conversation.ts": {
-    "mtime": 1789057035.2617073,
-    "seen": 1789061810.82864,
+    "mtime": 1789062300.3203297,
+    "seen": 1789139954.985186,
     "ast_hash": "9dff316ac46225d24c1f606bdfce120f",
     "semantic_hash": "9dff316ac46225d24c1f606bdfce120f"
   },
   "generated/prisma/models/Message.ts": {
-    "mtime": 1789057035.2618475,
-    "seen": 1789061810.828641,
+    "mtime": 1789062300.3203447,
+    "seen": 1789139954.985186,
     "ast_hash": "6a17b3a821fcd9543ca77146eb801d87",
     "semantic_hash": "6a17b3a821fcd9543ca77146eb801d87"
   },
   "generated/prisma/models/Payment.ts": {
-    "mtime": 1789057035.2616313,
-    "seen": 1789061810.828641,
+    "mtime": 1789062300.3190293,
+    "seen": 1789139954.985187,
     "ast_hash": "bf9a72d1aa3b02aae24e663291e8981c",
     "semantic_hash": "bf9a72d1aa3b02aae24e663291e8981c"
   },
   "generated/prisma/models/PaymentMethod.ts": {
-    "mtime": 1789057035.2616296,
-    "seen": 1789061810.8286421,
+    "mtime": 1789062300.3190002,
+    "seen": 1789139954.985188,
     "ast_hash": "a597183eee8cff708776812338a955db",
     "semantic_hash": "a597183eee8cff708776812338a955db"
   },
   "generated/prisma/models/Payout.ts": {
-    "mtime": 1789057035.2616844,
-    "seen": 1789061810.828643,
+    "mtime": 1789062300.3193321,
+    "seen": 1789139954.985188,
     "ast_hash": "e55cd7cad165c1ff32641e53bd88c9d6",
     "semantic_hash": "e55cd7cad165c1ff32641e53bd88c9d6"
   },
   "generated/prisma/models/Review.ts": {
-    "mtime": 1789057035.2616887,
-    "seen": 1789061810.828643,
+    "mtime": 1789062300.3194156,
+    "seen": 1789139954.9851892,
     "ast_hash": "c0b02831b23b7ed7e3f8e793d4d98ce4",
     "semantic_hash": "c0b02831b23b7ed7e3f8e793d4d98ce4"
   },
   "generated/prisma/models/Space.ts": {
-    "mtime": 1789057035.261561,
-    "seen": 1789061810.828644,
+    "mtime": 1789062300.3186598,
+    "seen": 1789139954.98519,
     "ast_hash": "52b7438c67a49f60675f7653c17e5852",
     "semantic_hash": "52b7438c67a49f60675f7653c17e5852"
   },
   "generated/prisma/models/User.ts": {
-    "mtime": 1789057035.261548,
-    "seen": 1789061810.8286452,
+    "mtime": 1789062300.318609,
+    "seen": 1789139954.98519,
     "ast_hash": "0623d2349be1d81b57febe7173563612",
     "semantic_hash": "0623d2349be1d81b57febe7173563612"
   },
@@ -647,12 +647,6 @@
     "ast_hash": "5a6fd53fdcf2be529e9cc0b718fde352",
     "semantic_hash": "5a6fd53fdcf2be529e9cc0b718fde352"
   },
-  "middleware.ts": {
-    "mtime": 1773997369.990207,
-    "seen": 1788525357.5374532,
-    "ast_hash": "62daf4503e8714f114b0462ff9b89e0c",
-    "semantic_hash": "62daf4503e8714f114b0462ff9b89e0c"
-  },
   "next.config.ts": {
     "mtime": 1774277364.5820303,
     "seen": 1788525357.5374532,
@@ -660,9 +654,9 @@
     "semantic_hash": "401f59acd9f11f7d071f39b0109b60a9"
   },
   "package.json": {
-    "mtime": 1789061635.2324767,
-    "seen": 1789061810.82865,
-    "ast_hash": "18d045a0a511d3027793648e0e517c76",
+    "mtime": 1789140729.0809853,
+    "seen": 1789140735.844393,
+    "ast_hash": "91ca88ef2eed92cc5f90d32b5a788cc9",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -732,8 +726,8 @@
     "semantic_hash": "2c7f09ccaafad5c9b82c437f7c6d5289"
   },
   "eslint.config.ts": {
-    "mtime": 1789061516.471526,
-    "seen": 1789061810.828631,
+    "mtime": 1789062294.5910923,
+    "seen": 1789139954.985177,
     "ast_hash": "8c674ad988217eb195cff58221930cc6",
     "semantic_hash": ""
   },
@@ -951,6 +945,42 @@
     "mtime": 1773582676.8206666,
     "seen": 1789061810.828683,
     "ast_hash": "a2760511c65806022ad20adf74370ff3",
+    "semantic_hash": ""
+  },
+  "components/forms/PasswordRecoveryForm.tsx": {
+    "mtime": 1789139930.6796308,
+    "seen": 1789139954.985132,
+    "ast_hash": "5d513afb7a233f447409ee5a91ce125b",
+    "semantic_hash": ""
+  },
+  "proxy.ts": {
+    "mtime": 1789136821.8566277,
+    "seen": 1789139954.985198,
+    "ast_hash": "51941d5d05d5d0327fa569a7e6489720",
+    "semantic_hash": ""
+  },
+  "app/password-recovery/page.tsx": {
+    "mtime": 1789140099.2499363,
+    "seen": 1789140147.0109591,
+    "ast_hash": "615f894e2a90fd12f1b35a7d83bd405f",
+    "semantic_hash": ""
+  },
+  "app/auth/callback/route.ts": {
+    "mtime": 1789140678.8003824,
+    "seen": 1789140735.8443,
+    "ast_hash": "e62e96f81e0e19f75e5cdb363299602d",
+    "semantic_hash": ""
+  },
+  "app/reset-password/page.tsx": {
+    "mtime": 1789140678.8208363,
+    "seen": 1789140735.8443189,
+    "ast_hash": "7fb159af499e0cfa2fca3a2cb54b908d",
+    "semantic_hash": ""
+  },
+  "components/forms/ResetPasswordForm.tsx": {
+    "mtime": 1789140678.810339,
+    "seen": 1789140735.844327,
+    "ast_hash": "607bfec75959884db82343285855ff83",
     "semantic_hash": ""
   }
 }

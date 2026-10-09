@@ -3,6 +3,13 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+
+type PasswordActionState = {
+  success: boolean;
+  error?: string;
+  message?: string;
+};
 
 export async function login(formData: FormData) {
   // Inizializza il client Supabase per il server (legge/scrive i cookie)
@@ -70,7 +77,10 @@ export async function logout() {
   redirect("/login");
 }
 
-export async function updatePasswordAction(prevState: any, formData: FormData) {
+export async function updatePasswordAction(
+  _previousState: PasswordActionState | null,
+  formData: FormData,
+) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -109,4 +119,104 @@ export async function updatePasswordAction(prevState: any, formData: FormData) {
   }
 
   return { success: true, message: "Password aggiornata con successo!" };
+}
+
+export async function requestPasswordResetAction(formData: FormData) {
+  const email = formData.get("email");
+
+  if (typeof email !== "string" || !email.trim()) {
+    return { success: false, error: "Inserisci un indirizzo email valido." };
+  }
+
+  const origin =
+    process.env.NEXT_PUBLIC_SITE_URL ?? (await headers()).get("origin");
+
+  if (!origin) {
+    console.error("[Password Reset] URL dell'applicazione non configurato.");
+    return { success: false, error: "Servizio temporaneamente non disponibile." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+  });
+
+  if (error) {
+    console.error("[Password Reset]", error);
+    return {
+      success: false,
+      error: "Impossibile inviare il link. Riprova più tardi.",
+    };
+  }
+
+  // Messaggio generico per non rivelare se l'email esiste.
+  return {
+    success: true,
+    message: "Se l'email è registrata, riceverai un link per reimpostare la password.",
+  };
+}
+
+export async function updateRecoveryPasswordAction(
+  _previousState: PasswordActionState | null,
+  formData: FormData,
+): Promise<PasswordActionState> {
+  const newPassword = formData.get("newPassword");
+  const confirmPassword = formData.get("confirmPassword");
+
+  if (
+    typeof newPassword !== "string" ||
+    typeof confirmPassword !== "string" ||
+    !newPassword ||
+    !confirmPassword
+  ) {
+    return {
+      success: false,
+      error: "Inserisci e conferma la nuova password.",
+    };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { success: false, error: "Le password non coincidono." };
+  }
+
+  if (newPassword.length < 8) {
+    return {
+      success: false,
+      error: "La password deve avere almeno 8 caratteri.",
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    if (authError) {
+      console.error("[Recovery Password Session Error]:", authError);
+    }
+
+    return {
+      success: false,
+      error: "Il link di recupero non è valido o è scaduto.",
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    console.error("[Recovery Password Error]:", error);
+    return {
+      success: false,
+      error: "Impossibile reimpostare la password. Riprova.",
+    };
+  }
+
+  return {
+    success: true,
+    message: "Password reimpostata con successo.",
+  };
 }

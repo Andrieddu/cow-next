@@ -98,17 +98,17 @@ export default async function SignupPage(props: {
               {/* Password */}
               <Field>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <FieldDescription>
-                  Deve essere di almeno 8 caratteri.
-                </FieldDescription>
                 <Input
                   id="password"
                   name="password"
                   type="password"
                   placeholder="••••••••"
                   required
-                  className="h-12 rounded-xl tracking-widest placeholder:tracking-normal"
+                  className="h-12 rounded-xl tracking-widest"
                 />
+                <FieldDescription>
+                  Deve essere di almeno 8 caratteri.
+                </FieldDescription>
               </Field>
             </FieldGroup>
           </FieldSet>
